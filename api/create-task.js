@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -17,10 +19,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Notion token tapılmadı' });
   }
 
-  // DEBUG - sonra siləcəyik
-  if (req.body.debug) {
-    return res.status(200).json({ token_prefix: token.substring(0, 10), token_length: token.length });
-  }
+
+  const trackingId = randomBytes(6).toString('hex');
 
   const properties = {
     "Task name": {
@@ -31,6 +31,9 @@ export default async function handler(req, res) {
     },
     "Project": {
       relation: [{ id: "2150b457-c8b4-8066-b07c-f4fabd8098b4" }]
+    },
+    "Tracking ID": {
+      rich_text: [{ text: { content: trackingId } }]
     }
   };
 
@@ -76,7 +79,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: data.message || 'Notion xətası' });
     }
 
-    return res.status(200).json({ success: true, url: data.url, id: data.id });
+    return res.status(200).json({ success: true, url: data.url, id: data.id, trackingId });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
