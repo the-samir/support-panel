@@ -17,6 +17,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Notion token tapılmadı' });
   }
 
+  // DEBUG - sonra siləcəyik
+  if (req.body.debug) {
+    return res.status(200).json({ token_prefix: token.substring(0, 10), token_length: token.length });
+  }
+
   const properties = {
     "Task name": {
       title: [{ text: { content: taskName.trim() } }]
