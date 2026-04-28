@@ -241,6 +241,8 @@
     .msg.loading { display: block; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); }
 
 
+    .track-link { color: var(--green); text-decoration: none; display: inline-block; margin-top: 5px; font-size: 12px; opacity: 0.85; }
+    .track-link:hover { opacity: 1; }
   </style>
 </head>
 <body>
@@ -393,7 +395,8 @@
         const data = await res.json();
 
         if (data.success) {
-          showMsg('İstəyiniz qeydə alındı, tezliklə cavab veriləcək!', 'success');
+          const trackUrl = '/track.html?id=' + data.trackingId;
+          showMsg('İstəyiniz qeydə alındı! <a class="track-link" href="' + trackUrl + '" target="_blank">Sorğunun statusunu izlə →</a>', 'success');
           document.getElementById('taskName').value = '';
           document.getElementById('description').value = '';
           document.getElementById('dueDate').value = '';
