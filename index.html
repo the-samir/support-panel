@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #171717;
+      --border: #262626;
+      --border-hover: #333;
+      --text: #e8e8e8;
+      --muted: #666;
+      --green: #4ade80;
+      --red: #f87171;
+      --yellow: #fbbf24;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .wrap { width: 100%; max-width: 520px; }
+    .top { margin-bottom: 2.5rem; }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .logo-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 300;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+    }
+
+    .field { margin-bottom: 1.25rem; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .required-star { color: var(--red); margin-left: 2px; }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, textarea:focus { border-color: var(--border-hover); }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.4);
+      cursor: pointer;
+    }
+
+    .datetime-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+    .priority-group { display: flex; gap: 8px; }
+
+    .priority-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .priority-btn:hover { border-color: var(--border-hover); color: var(--text); }
+
+    .priority-btn.active[data-p="High"] { border-color: var(--red); color: var(--red); background: rgba(248,113,113,0.06); }
+    .priority-btn.active[data-p="Medium"] { border-color: var(--yellow); color: var(--yellow); background: rgba(251,191,36,0.06); }
+    .priority-btn.active[data-p="Low"] { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.06); }
+
+    .tags-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .tag-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--bg);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tag-btn:hover { border-color: var(--border-hover); color: var(--text); }
+
+    .tag-btn.selected {
+      border-color: var(--text);
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .tags-grid.has-error .tag-btn:not(.selected) {
+      border-color: rgba(248,113,113,0.4);
+    }
+
+    .field-error {
+      font-size: 12px;
+      color: var(--red);
+      margin-top: 7px;
+      display: none;
+    }
+
+    .field-error.visible { display: block; }
+
+    .submit {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 12px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .submit:hover { opacity: 0.88; }
+    .submit:active { transform: scale(0.99); }
+    .submit:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .msg {
+      margin-top: 1rem;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .msg.success { display: block; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25); color: var(--green); }
+    .msg.error { display: block; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--red); }
+    .msg.loading { display: block; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); }
+
+    .notion-link { color: var(--green); text-decoration: none; font-size: 12px; display: inline-block; margin-top: 6px; opacity: 0.8; }
+    .notion-link:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        <span class="logo-text">Support Panel</span>
+      </div>
+      <h1>Yeni istək göndər</h1>
+      <p class="subtitle">Probleminizi və ya təklifinizi yazın, komandamız ən qısa zamanda baxacaq.</p>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>Başlıq <span class="required-star">*</span></label>
+        <input type="text" id="taskName" placeholder="Problemi qısaca ifadə edin..." />
+      </div>
+
+      <div class="field">
+        <label>Ətraflı açıqlama</label>
+        <textarea id="description" placeholder="Nə baş verdi? Hansı addımları atdınız? Nə gözləyirdiniz?"></textarea>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label>Prioritet</label>
+        <div class="priority-group">
+          <button class="priority-btn" data-p="High" onclick="setPriority('High')">🔴 Yüksək</button>
+          <button class="priority-btn" data-p="Medium" onclick="setPriority('Medium')">🟡 Orta</button>
+          <button class="priority-btn" data-p="Low" onclick="setPriority('Low')">🟢 Aşağı</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Son tarix</label>
+        <div class="datetime-row">
+          <input type="date" id="dueDate" />
+          <input type="time" id="dueTime" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tag-lar <span class="required-star">*</span></label>
+        <div class="tags-grid" id="tagsGrid">
+          <button type="button" class="tag-btn" data-tag="Jira" onclick="selectTag(this)">Jira</button>
+          <button type="button" class="tag-btn" data-tag="Confluence" onclick="selectTag(this)">Confluence</button>
+          <button type="button" class="tag-btn" data-tag="FortiClient" onclick="selectTag(this)">FortiClient</button>
+          <button type="button" class="tag-btn" data-tag="GlobalProtect" onclick="selectTag(this)">GlobalProtect</button>
+          <button type="button" class="tag-btn" data-tag="WireGuard" onclick="selectTag(this)">WireGuard</button>
+          <button type="button" class="tag-btn" data-tag="Outlook" onclick="selectTag(this)">Outlook</button>
+          <button type="button" class="tag-btn" data-tag="Discord" onclick="selectTag(this)">Discord</button>
+        </div>
+        <div class="field-error" id="tagError">Zəhmət olmasa bir tag seçin</div>
+      </div>
+
+      <button class="submit" id="submitBtn" onclick="createTask()">Göndər →</button>
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+
+  <script>
+    let selectedPriority = '';
+    let selectedTag = '';
+
+    function setPriority(p) {
+      selectedPriority = p;
+      document.querySelectorAll('.priority-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.p === p);
+      });
+    }
+
+    function selectTag(btn) {
+      const tag = btn.dataset.tag;
+      if (selectedTag === tag) {
+        selectedTag = '';
+        btn.classList.remove('selected');
+      } else {
+        selectedTag = tag;
+        document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      }
+      document.getElementById('tagsGrid').classList.remove('has-error');
+      document.getElementById('tagError').classList.remove('visible');
+    }
+
+    async function createTask() {
+      const taskName = document.getElementById('taskName').value.trim();
+
+      if (!taskName) {
+        showMsg('Başlıq daxil edin', 'error');
+        return;
+      }
+
+      if (!selectedTag) {
+        document.getElementById('tagsGrid').classList.add('has-error');
+        document.getElementById('tagError').classList.add('visible');
+        document.getElementById('tagsGrid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const description = document.getElementById('description').value.trim();
+      const dueDate = document.getElementById('dueDate').value;
+      const dueTime = document.getElementById('dueTime').value;
+      const isDatetime = !!(dueDate && dueTime);
+      const dueDatetime = dueDate ? (dueTime ? `${dueDate}T${dueTime}` : dueDate) : null;
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      showMsg('Göndərilir...', 'loading');
+
+      try {
+        const res = await fetch('/api/create-task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            taskName,
+            description,
+            priority: selectedPriority,
+            dueDate: dueDatetime,
+            isDatetime,
+            tags: [selectedTag]
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          const linkHtml = data.url
+            ? `<br><a class="notion-link" href="${data.url}" target="_blank">Notion-da aç →</a>`
+            : '';
+          showMsg(`İstəyiniz qeydə alındı, tezliklə cavab veriləcək! ${linkHtml}`, 'success');
+          document.getElementById('taskName').value = '';
+          document.getElementById('description').value = '';
+          document.getElementById('dueDate').value = '';
+          document.getElementById('dueTime').value = '';
+          selectedPriority = '';
+          selectedTag = '';
+          document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
+        } else {
+          showMsg('Xəta: ' + (data.error || 'Bilinməyən xəta'), 'error');
+        }
+      } catch (err) {
+        showMsg('Bağlantı xətası: ' + err.message, 'error');
+      }
+
+      btn.disabled = false;
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById('msg');
+      el.innerHTML = text;
+      el.className = 'msg ' + type;
+    }
+  </script>
+</body>
+</html>
