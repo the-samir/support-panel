@@ -8,138 +8,52 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0f0f0f;
-      --surface: #171717;
-      --border: #262626;
-      --text: #e8e8e8;
-      --muted: #666;
-      --green: #4ade80;
-      --red: #f87171;
-      --yellow: #fbbf24;
-      --blue: #60a5fa;
+      --bg: #0f0f0f; --surface: #171717; --border: #262626;
+      --text: #e8e8e8; --muted: #666; --green: #4ade80;
+      --red: #f87171; --yellow: #fbbf24; --blue: #60a5fa;
     }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1rem;
-    }
-
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; }
     .wrap { width: 100%; max-width: 480px; }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 2rem;
-    }
-
-    .logo-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    .logo-text {
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.75rem;
-    }
-
-    .loading {
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-      padding: 2rem 0;
-    }
-
-    .error-state {
-      text-align: center;
-      color: var(--red);
-      font-size: 14px;
-      padding: 2rem 0;
-    }
-
-    .task-title {
-      font-size: 20px;
-      font-weight: 400;
-      margin-bottom: 1.5rem;
-      line-height: 1.3;
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 1.5rem;
-    }
-
-    .status-badge.not-started { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
-    .status-badge.in-progress { background: rgba(96,165,250,0.1); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); }
-    .status-badge.in-review { background: rgba(96,165,250,0.08); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
-    .status-badge.done { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
-    .status-badge.on-hold { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
-    .status-badge.cancelled { background: rgba(248,113,113,0.08); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
-
-    .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
-
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      padding: 6px 0;
-    }
-
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .logo-text { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+    .loading { text-align: center; color: var(--muted); font-size: 14px; padding: 2rem 0; }
+    .error-state { text-align: center; color: var(--red); font-size: 14px; padding: 2rem 0; }
+    .task-title { font-size: 20px; font-weight: 400; margin-bottom: 1rem; line-height: 1.3; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 1.25rem; }
+    .not-started { background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--border); }
+    .in-progress { background: rgba(96,165,250,.1); color: var(--blue); border: 1px solid rgba(96,165,250,.3); }
+    .done { background: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.3); }
+    .on-hold { background: rgba(255,255,255,.04); color: var(--muted); border: 1px solid var(--border); }
+    .cancelled { background: rgba(248,113,113,.08); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
+    .divider { height: 1px; background: var(--border); margin: 1rem 0; }
+    .meta { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
     .meta-label { color: var(--muted); }
-    .meta-value { color: var(--text); }
-
-    .priority-high { color: var(--red); }
-    .priority-medium { color: var(--yellow); }
-    .priority-low { color: var(--green); }
-
-    .tracking-id {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 1.5rem;
-      padding-top: 1.25rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .back-link {
-      display: inline-block;
-      margin-top: 1.5rem;
-      font-size: 13px;
-      color: var(--muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-
+    .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: #555; margin-bottom: 14px; }
+    .messages { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; min-height: 40px; }
+    .msg-row { display: flex; flex-direction: column; gap: 3px; }
+    .msg-row.mine { align-items: flex-end; }
+    .msg-row.theirs { align-items: flex-start; }
+    .bubble { padding: 9px 13px; border-radius: 10px; font-size: 13px; line-height: 1.5; max-width: 85%; }
+    .bubble.mine { background: rgba(255,255,255,.08); color: var(--text); border-bottom-right-radius: 3px; }
+    .bubble.theirs { background: rgba(74,222,128,.1); color: #d1fae5; border: 1px solid rgba(74,222,128,.2); border-bottom-left-radius: 3px; }
+    .msg-meta { font-size: 11px; color: #444; padding: 0 4px; }
+    .msg-who { color: var(--green); }
+    .no-messages { font-size: 13px; color: #444; text-align: center; padding: 1rem 0; }
+    .input-row { display: flex; gap: 8px; }
+    .msg-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 9px 13px; outline: none; transition: border-color .15s; }
+    .msg-input:focus { border-color: #333; }
+    .send-btn { padding: 9px 16px; background: var(--text); color: var(--bg); border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity .15s; white-space: nowrap; }
+    .send-btn:hover { opacity: .88; }
+    .send-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .tracking-id { font-family: 'DM Mono', monospace; font-size: 11px; color: #444; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #1e1e1e; }
+    .back-link { display: inline-block; margin-top: 1.5rem; font-size: 13px; color: var(--muted); text-decoration: none; transition: color .15s; }
     .back-link:hover { color: var(--text); }
+    .send-error { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
+    .send-error.visible { display: block; }
   </style>
 </head>
 <body>
@@ -149,10 +63,23 @@
       <span class="logo-text">Support Panel</span>
     </div>
 
-    <div class="card" id="card">
+    <div class="card" id="statusCard">
       <div class="loading">Yüklənir...</div>
     </div>
 
+    <div class="card" id="chatCard" style="display:none">
+      <div class="section-label">Mesajlar</div>
+      <div class="messages" id="messages">
+        <div class="no-messages">Hələ mesaj yoxdur</div>
+      </div>
+      <div class="input-row">
+        <input class="msg-input" id="msgInput" placeholder="Mesaj yazın..." onkeydown="handleKey(event)" />
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">Göndər</button>
+      </div>
+      <div class="send-error" id="sendError"></div>
+    </div>
+
+    <div class="tracking-id" id="trackingIdLabel" style="display:none"></div>
     <a href="/" class="back-link">← Yeni sorğu göndər</a>
   </div>
 
@@ -163,62 +90,121 @@
     const statusMap = {
       'Not started': { label: 'Başlanmayıb', cls: 'not-started', icon: '○' },
       'In progress': { label: 'İcrada', cls: 'in-progress', icon: '◑' },
-      'In Review': { label: 'Yoxlanılır', cls: 'in-review', icon: '◑' },
-      'Done': { label: 'Tamamlandı', cls: 'done', icon: '●' },
-      'On Hold': { label: 'Gözləmədə', cls: 'on-hold', icon: '◌' },
-      'Cancelled': { label: 'Ləğv edildi', cls: 'cancelled', icon: '✕' },
+      'In Review':   { label: 'Yoxlanılır', cls: 'in-progress', icon: '◑' },
+      'Done':        { label: 'Tamamlandı', cls: 'done', icon: '●' },
+      'On Hold':     { label: 'Gözləmədə', cls: 'on-hold', icon: '◌' },
+      'Cancelled':   { label: 'Ləğv edildi', cls: 'cancelled', icon: '✕' },
     };
 
-    function formatDate(dateStr) {
-      if (!dateStr) return null;
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('az-AZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const priorityLabels = { High: '🔴 Yüksək', Medium: '🟡 Orta', Low: '🟢 Aşağı' };
+    const priorityCls = { High: 'var(--red)', Medium: 'var(--yellow)', Low: 'var(--green)' };
+
+    function formatDate(d) {
+      if (!d) return null;
+      return new Date(d).toLocaleDateString('az-AZ', { day:'2-digit', month:'2-digit', year:'numeric' });
+    }
+
+    function formatTime(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleTimeString('az-AZ', { hour:'2-digit', minute:'2-digit' });
     }
 
     async function loadStatus() {
-      const card = document.getElementById('card');
-
-      if (!trackingId) {
-        card.innerHTML = '<div class="error-state">Tracking ID tapılmadı</div>';
-        return;
-      }
+      const card = document.getElementById('statusCard');
+      if (!trackingId) { card.innerHTML = '<div class="error-state">Tracking ID tapılmadı</div>'; return; }
 
       try {
-        const res = await fetch(`/api/track?id=${trackingId}`);
+        const res = await fetch('/api/track?id=' + trackingId);
         const data = await res.json();
 
-        if (!data.success) {
-          card.innerHTML = `<div class="error-state">${data.error || 'Sorğu tapılmadı'}</div>`;
+        if (!data.success) { card.innerHTML = '<div class="error-state">' + (data.error || 'Sorğu tapılmadı') + '</div>'; return; }
+
+        const st = statusMap[data.status] || { label: data.status, cls: 'not-started', icon: '○' };
+
+        card.innerHTML =
+          '<div class="task-title">' + data.taskName + '</div>' +
+          '<div class="status-badge ' + st.cls + '">' + st.icon + ' ' + st.label + '</div>' +
+          '<div class="divider"></div>' +
+          (data.priority ? '<div class="meta"><span class="meta-label">Prioritet</span><span style="color:' + (priorityCls[data.priority] || 'var(--text)') + '">' + (priorityLabels[data.priority] || data.priority) + '</span></div>' : '') +
+          (data.dueDate ? '<div class="meta"><span class="meta-label">Son tarix</span><span>' + formatDate(data.dueDate) + '</span></div>' : '') +
+          '<div class="meta"><span class="meta-label">Göndərildi</span><span>' + formatDate(data.createdTime) + '</span></div>';
+
+        document.getElementById('chatCard').style.display = 'block';
+        document.getElementById('trackingIdLabel').style.display = 'block';
+        document.getElementById('trackingIdLabel').textContent = 'ID: ' + trackingId;
+
+        loadComments();
+      } catch (err) {
+        card.innerHTML = '<div class="error-state">Bağlantı xətası</div>';
+      }
+    }
+
+    async function loadComments() {
+      try {
+        const res = await fetch('/api/comments?id=' + trackingId);
+        const data = await res.json();
+        if (!data.success) return;
+
+        const container = document.getElementById('messages');
+        if (!data.comments || data.comments.length === 0) {
+          container.innerHTML = '<div class="no-messages">Hələ mesaj yoxdur</div>';
           return;
         }
 
-        const st = statusMap[data.status] || { label: data.status, cls: 'not-started', icon: '○' };
-        const priorityLabels = { High: '🔴 Yüksək', Medium: '🟡 Orta', Low: '🟢 Aşağı' };
-        const priorityCls = { High: 'priority-high', Medium: 'priority-medium', Low: 'priority-low' };
+        container.innerHTML = data.comments.map(c =>
+          '<div class="msg-row ' + (c.isUser ? 'mine' : 'theirs') + '">' +
+          (!c.isUser ? '<span class="msg-meta msg-who">Samir</span>' : '') +
+          '<div class="bubble ' + (c.isUser ? 'mine' : 'theirs') + '">' + escHtml(c.text) + '</div>' +
+          '<span class="msg-meta">' + formatTime(c.time) + '</span>' +
+          '</div>'
+        ).join('');
 
-        card.innerHTML = `
-          <div class="task-title">${data.taskName}</div>
-          <div class="status-badge ${st.cls}">${st.icon} ${st.label}</div>
-          <div class="divider"></div>
-          ${data.priority ? `
-          <div class="meta-row">
-            <span class="meta-label">Prioritet</span>
-            <span class="meta-value ${priorityCls[data.priority] || ''}">${priorityLabels[data.priority] || data.priority}</span>
-          </div>` : ''}
-          ${data.dueDate ? `
-          <div class="meta-row">
-            <span class="meta-label">Son tarix</span>
-            <span class="meta-value">${formatDate(data.dueDate)}</span>
-          </div>` : ''}
-          <div class="meta-row">
-            <span class="meta-label">Göndərildi</span>
-            <span class="meta-value">${formatDate(data.createdTime)}</span>
-          </div>
-          <div class="tracking-id">ID: ${trackingId}</div>
-        `;
+        container.scrollTop = container.scrollHeight;
+      } catch (err) {}
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const btn = document.getElementById('sendBtn');
+      const errEl = document.getElementById('sendError');
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      btn.disabled = true;
+      errEl.classList.remove('visible');
+
+      try {
+        const res = await fetch('/api/comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ trackingId, message: text })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          input.value = '';
+          await loadComments();
+        } else {
+          errEl.textContent = data.error || 'Göndərilmədi';
+          errEl.classList.add('visible');
+        }
       } catch (err) {
-        card.innerHTML = `<div class="error-state">Bağlantı xətası</div>`;
+        errEl.textContent = 'Bağlantı xətası';
+        errEl.classList.add('visible');
       }
+
+      btn.disabled = false;
+      input.focus();
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    function escHtml(t) {
+      return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     loadStatus();
