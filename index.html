@@ -504,6 +504,34 @@
     .track-link { color: var(--green); text-decoration: none; display: inline-block; margin-top: 5px; font-size: 12px; opacity: 0.85; }
     .track-link:hover { opacity: 1; }
 
+    .guest-note {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+    }
+    [data-theme="light"] .guest-note { background: rgba(0,0,0,0.02); }
+    .guest-note-icon { font-size: 14px; opacity: 0.5; flex-shrink: 0; }
+    .guest-note-text { font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1; }
+    .guest-note-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      padding: 5px 12px;
+      white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .guest-note-btn:hover { border-color: var(--border-hover); }
+
   </style>
 </head>
 <body>
@@ -531,6 +559,12 @@
 
       <h1>Yeni istək göndər</h1>
       <p class="subtitle">Probleminizi və ya təklifinizi göndərin, mümkün ən qısa zamanda baxılacaq.</p>
+    </div>
+
+    <div class="guest-note" id="guestNote">
+      <span class="guest-note-icon">💡</span>
+      <span class="guest-note-text">Göndərdiyiniz sorğuların statusunu izləmək və tarixçənizi görmək üçün hesabınıza daxil olun.</span>
+      <button class="guest-note-btn" onclick="window._clerk ? window._clerk.openSignIn() : null">Daxil ol</button>
     </div>
 
     <div class="card" id="mainCard">
@@ -871,16 +905,19 @@
       const myReqLink = document.getElementById('myReqLink');
       const signoutBtn = document.getElementById('signoutBtn');
       const signinBtn = document.getElementById('signinBtn');
+      const guestNote = document.getElementById('guestNote');
       if (user) {
         nameEl.textContent = user.fullName || user.primaryEmailAddress?.emailAddress || '';
         myReqLink.style.display = '';
         signoutBtn.style.display = '';
         signinBtn.style.display = 'none';
+        guestNote.style.display = 'none';
       } else {
         nameEl.textContent = '';
         myReqLink.style.display = 'none';
         signoutBtn.style.display = 'none';
         signinBtn.style.display = '';
+        guestNote.style.display = '';
       }
     }
 
