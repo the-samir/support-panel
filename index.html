@@ -548,12 +548,11 @@
         </div>
       </div>
 
-      <div class="user-bar visible" id="userBar">
+      <div class="user-bar" id="userBar">
         <span class="user-name" id="userNameEl"></span>
         <div class="user-actions">
-          <a href="/my-requests" class="my-req-link" id="myReqLink" style="display:none">Sorğularım →</a>
-          <button class="signout-btn" id="signoutBtn" style="display:none" onclick="window._clerk && window._clerk.signOut()">Çıxış</button>
-          <button class="signout-btn" id="signinBtn" onclick="window._clerk ? window._clerk.openSignIn() : null">Giriş et →</button>
+          <a href="/my-requests" class="my-req-link" id="myReqLink">Sorğularım →</a>
+          <button class="signout-btn" id="signoutBtn" onclick="window._clerk && window._clerk.signOut()">Çıxış</button>
         </div>
       </div>
 
@@ -902,21 +901,14 @@
     // ── Clerk auth ──────────────────────────────────────────────
     function updateUserBar(user) {
       const nameEl = document.getElementById('userNameEl');
-      const myReqLink = document.getElementById('myReqLink');
-      const signoutBtn = document.getElementById('signoutBtn');
-      const signinBtn = document.getElementById('signinBtn');
+      const userBar = document.getElementById('userBar');
       const guestNote = document.getElementById('guestNote');
       if (user) {
         nameEl.textContent = user.fullName || user.primaryEmailAddress?.emailAddress || '';
-        myReqLink.style.display = '';
-        signoutBtn.style.display = '';
-        signinBtn.style.display = 'none';
+        userBar.classList.add('visible');
         guestNote.style.display = 'none';
       } else {
-        nameEl.textContent = '';
-        myReqLink.style.display = 'none';
-        signoutBtn.style.display = 'none';
-        signinBtn.style.display = '';
+        userBar.classList.remove('visible');
         guestNote.style.display = '';
       }
     }
