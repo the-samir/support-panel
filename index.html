@@ -1,9 +1,16 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="az" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Support Panel</title>
+  <script>
+    (function() {
+      var saved = localStorage.getItem('sp-theme');
+      var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
@@ -19,6 +26,18 @@
       --green: #4ade80;
       --red: #f87171;
       --yellow: #fbbf24;
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f5f3;
+      --surface: #ffffff;
+      --border: #e0e0da;
+      --border-hover: #c8c8c0;
+      --text: #1a1a1a;
+      --muted: #999;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #d97706;
     }
 
     body {
@@ -62,6 +81,27 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
+
+    .theme-btn {
+      margin-left: auto;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 3px 6px;
+      font-size: 14px;
+      line-height: 1;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .theme-btn:hover {
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    [data-theme="dark"] .icon-moon { display: none; }
+    [data-theme="light"] .icon-sun { display: none; }
 
     h1 {
       font-size: 28px;
@@ -120,6 +160,11 @@
       cursor: pointer;
     }
 
+    [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+    [data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0);
+    }
+
     .datetime-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -143,7 +188,7 @@
     }
 
     select.sp-select:focus { border-color: var(--border-hover); }
-    select.sp-select option { background: #1a1a1a; }
+    select.sp-select option { background: var(--surface); color: var(--text); }
 
     .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
 
@@ -240,7 +285,6 @@
     .msg.error { display: block; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--red); }
     .msg.loading { display: block; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); }
 
-
     .track-link { color: var(--green); text-decoration: none; display: inline-block; margin-top: 5px; font-size: 12px; opacity: 0.85; }
     .track-link:hover { opacity: 1; }
   </style>
@@ -251,6 +295,10 @@
       <div class="logo">
         <div class="logo-dot"></div>
         <span class="logo-text">Support Panel</span>
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Tema dəyiş">
+          <span class="icon-sun">☀</span>
+          <span class="icon-moon">☽</span>
+        </button>
       </div>
       <h1>Yeni istək göndər</h1>
       <p class="subtitle">Probleminizi və ya təklifinizi göndərin, mümkün ən qısa zamanda baxılacaq.</p>
@@ -417,6 +465,19 @@
 
       btn.disabled = false;
     }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('sp-theme', next);
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem('sp-theme')) {
+        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      }
+    });
 
     function showMsg(text, type) {
       const el = document.getElementById('msg');
