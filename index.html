@@ -13,6 +13,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -94,22 +95,11 @@
       line-height: 1;
       transition: color 0.15s, border-color 0.15s;
     }
-
-    .theme-btn:hover {
-      color: var(--text);
-      border-color: var(--border-hover);
-    }
-
+    .theme-btn:hover { color: var(--text); border-color: var(--border-hover); }
     [data-theme="dark"] .icon-moon { display: none; }
     [data-theme="light"] .icon-sun { display: none; }
 
-    h1 {
-      font-size: 28px;
-      font-weight: 300;
-      line-height: 1.2;
-      margin-bottom: 0.5rem;
-    }
-
+    h1 { font-size: 28px; font-weight: 300; line-height: 1.2; margin-bottom: 0.5rem; }
     .subtitle { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
     .card {
@@ -134,8 +124,6 @@
     .required-star { color: var(--red); margin-left: 2px; }
 
     input[type="text"],
-    input[type="date"],
-    input[type="time"],
     textarea {
       width: 100%;
       background: var(--bg);
@@ -151,47 +139,11 @@
 
     input:focus, textarea:focus { border-color: var(--border-hover); }
     input::placeholder, textarea::placeholder { color: var(--muted); }
-
     textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
-
-    input[type="date"]::-webkit-calendar-picker-indicator,
-    input[type="time"]::-webkit-calendar-picker-indicator {
-      filter: invert(0.4);
-      cursor: pointer;
-    }
-
-    [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
-    [data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
-      filter: invert(0);
-    }
-
-    .datetime-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-    }
-
-    select.sp-select {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      padding: 10px 14px;
-      outline: none;
-      transition: border-color 0.15s;
-      appearance: none;
-      -webkit-appearance: none;
-      cursor: pointer;
-    }
-
-    select.sp-select:focus { border-color: var(--border-hover); }
-    select.sp-select option { background: var(--surface); color: var(--text); }
 
     .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
 
+    /* Priority */
     .priority-group { display: flex; gap: 8px; }
 
     .priority-btn {
@@ -212,26 +164,16 @@
       gap: 6px;
     }
 
-    .p-bars {
-      display: inline-flex;
-      align-items: flex-end;
-      gap: 2px;
-    }
-    .p-bars b {
-      display: block;
-      width: 3px;
-      border-radius: 1px;
-      background: currentColor;
-      opacity: 0.2;
-    }
-    .p-bars b.on { opacity: 1; }
-
     .priority-btn:hover { border-color: var(--border-hover); color: var(--text); }
-
     .priority-btn.active[data-p="High"] { border-color: var(--red); color: var(--red); background: rgba(248,113,113,0.06); }
     .priority-btn.active[data-p="Medium"] { border-color: var(--yellow); color: var(--yellow); background: rgba(251,191,36,0.06); }
     .priority-btn.active[data-p="Low"] { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.06); }
 
+    .p-bars { display: inline-flex; align-items: flex-end; gap: 2px; }
+    .p-bars b { display: block; width: 3px; border-radius: 1px; background: currentColor; opacity: 0.2; }
+    .p-bars b.on { opacity: 1; }
+
+    /* Tags */
     .tags-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 
     .tag-btn {
@@ -245,32 +187,196 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-
     .tag-btn:hover { border-color: var(--border-hover); color: var(--text); }
+    .tag-btn.selected { border-color: var(--text); color: var(--text); background: rgba(255,255,255,0.06); }
 
-    .tag-btn.selected {
-      border-color: var(--text);
+    /* Datetime */
+    .datetime-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .dt-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .dt-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .dt-header { display: flex; align-items: center; justify-content: space-between; }
+
+    .clear-time-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .clear-time-btn:hover { color: var(--text); }
+
+    .time-row { display: flex; align-items: center; gap: 6px; }
+    .time-row .custom-select { flex: 1; }
+
+    .time-sep {
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    /* Flatpickr date input */
+    .flatpickr-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
       color: var(--text);
-      background: rgba(255,255,255,0.06);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      cursor: pointer;
     }
+    .flatpickr-input:focus { border-color: var(--border-hover); }
+    .flatpickr-input::placeholder { color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: 0.04em; }
+    .date-error .flatpickr-input { border-color: rgba(248,113,113,0.5); }
 
-    .datetime-row.date-error input[type="date"] {
-      border-color: rgba(248,113,113,0.5);
+    /* Flatpickr calendar */
+    .flatpickr-calendar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      font-family: 'DM Sans', sans-serif;
+      padding: 8px;
+      width: 272px;
     }
-
-    .tags-grid.has-error .tag-btn:not(.selected) {
-      border-color: rgba(248,113,113,0.4);
+    .flatpickr-calendar.arrowTop:before,
+    .flatpickr-calendar.arrowTop:after,
+    .flatpickr-calendar.arrowBottom:before,
+    .flatpickr-calendar.arrowBottom:after { display: none; }
+    .flatpickr-months { padding: 2px 0 6px; }
+    .flatpickr-months .flatpickr-month { background: transparent; color: var(--text); fill: var(--text); height: 32px; }
+    .flatpickr-current-month { font-size: 13px; padding-top: 5px; }
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      border: none;
+      outline: none;
     }
+    .flatpickr-current-month input.cur-year {
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+    }
+    .flatpickr-prev-month svg, .flatpickr-next-month svg { fill: var(--muted); }
+    .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg { fill: var(--text); }
+    .flatpickr-weekdays { background: transparent; margin-bottom: 2px; }
+    span.flatpickr-weekday { background: transparent; color: var(--muted); font-size: 11px; font-family: 'DM Sans', sans-serif; }
+    .flatpickr-days { border: none; }
+    .dayContainer { padding: 0; min-width: unset; max-width: unset; width: 100%; }
+    .flatpickr-day {
+      color: var(--text);
+      border-radius: 6px;
+      height: 34px;
+      line-height: 34px;
+      font-size: 13px;
+      border: 1px solid transparent;
+      max-width: unset;
+      flex-basis: calc(100% / 7);
+    }
+    .flatpickr-day:hover { background: var(--bg); border-color: transparent; }
+    .flatpickr-day.selected,
+    .flatpickr-day.selected:hover {
+      background: var(--text);
+      color: var(--bg);
+      border-color: transparent;
+    }
+    .flatpickr-day.today { border-color: var(--border-hover); }
+    .flatpickr-day.today.selected { border-color: transparent; }
+    .flatpickr-day.prevMonthDay,
+    .flatpickr-day.nextMonthDay { color: var(--border); }
+    .flatpickr-day.flatpickr-disabled { color: var(--border); opacity: 0.4; }
+    .numInputWrapper span { border-color: var(--border); }
+    .numInputWrapper span:after { border-top-color: var(--muted); border-bottom-color: var(--muted); }
+    .numInputWrapper:hover { background: var(--bg); }
 
-    .field-error {
-      font-size: 12px;
-      color: var(--red);
-      margin-top: 7px;
+    /* Custom select dropdown */
+    .custom-select { position: relative; user-select: none; }
+
+    .cs-btn {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.15s;
+    }
+    .cs-btn:hover { border-color: var(--border-hover); }
+    .cs-btn.has-value { color: var(--text); }
+
+    .cs-arrow {
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform 0.15s;
+      line-height: 1;
+    }
+    .custom-select.open .cs-arrow { transform: rotate(180deg); }
+
+    .cs-list {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 99;
       display: none;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
     }
+    .custom-select.open .cs-list { display: block; }
 
+    .cs-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
+      transition: background 0.1s;
+    }
+    .cs-item:hover { background: var(--bg); }
+    .cs-item.active { color: var(--green); }
+
+    /* Errors */
+    .datetime-row.date-error .flatpickr-input { border-color: rgba(248,113,113,0.5); }
+    .tags-grid.has-error .tag-btn:not(.selected) { border-color: rgba(248,113,113,0.4); }
+
+    .field-error { font-size: 12px; color: var(--red); margin-top: 7px; display: none; }
     .field-error.visible { display: block; }
 
+    /* Submit */
     .submit {
       width: 100%;
       margin-top: 1.5rem;
@@ -285,7 +391,6 @@
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
     }
-
     .submit:hover { opacity: 0.88; }
     .submit:active { transform: scale(0.99); }
     .submit:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -298,7 +403,6 @@
       display: none;
       line-height: 1.5;
     }
-
     .msg.success { display: block; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25); color: var(--green); }
     .msg.error { display: block; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--red); }
     .msg.loading { display: block; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); }
@@ -313,7 +417,7 @@
       <div class="logo">
         <div class="logo-dot"></div>
         <span class="logo-text">Support Panel</span>
-        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Tema dəyiş">
+        <button class="theme-btn" onclick="toggleTheme()" aria-label="Tema dəyiş">
           <span class="icon-sun">☀</span>
           <span class="icon-moon">☽</span>
         </button>
@@ -347,15 +451,33 @@
       <div class="field">
         <label>Son tarix <span class="required-star">*</span></label>
         <div class="datetime-row" id="dueDateWrap">
-          <input type="date" id="dueDate" oninput="clearDateError()" />
-          <select class="sp-select" id="dueHour">
-            <option value="">saat</option>
-            <option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option>
-          </select>
-          <select class="sp-select" id="dueMinute">
-            <option value="">dəqiqə</option>
-            <option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option>
-          </select>
+          <div class="dt-group">
+            <span class="dt-label">Gün</span>
+            <input type="text" id="dueDate" placeholder="--/--/----" readonly />
+          </div>
+          <div class="dt-group">
+            <div class="dt-header">
+              <span class="dt-label">Saat</span>
+              <button class="clear-time-btn" onclick="clearTime()">Təmizlə</button>
+            </div>
+            <div class="time-row">
+              <div class="custom-select" id="hourSelect">
+                <div class="cs-btn" onclick="toggleDropdown('hourSelect')">
+                  <span class="cs-val">--</span>
+                  <span class="cs-arrow">▾</span>
+                </div>
+                <div class="cs-list"></div>
+              </div>
+              <span class="time-sep">:</span>
+              <div class="custom-select" id="minuteSelect">
+                <div class="cs-btn" onclick="toggleDropdown('minuteSelect')">
+                  <span class="cs-val">--</span>
+                  <span class="cs-arrow">▾</span>
+                </div>
+                <div class="cs-list"></div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="field-error" id="dateError">Zəhmət olmasa tarixi seçin</div>
       </div>
@@ -380,20 +502,103 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
     let selectedPriority = '';
     let selectedTag = '';
+    let selectedHour = '';
+    let selectedMinute = '';
+    let fp = null;
+
+    // Build hour options: 00–23
+    const hourList = document.querySelector('#hourSelect .cs-list');
+    for (let h = 0; h < 24; h++) {
+      const v = String(h).padStart(2, '0');
+      const item = document.createElement('div');
+      item.className = 'cs-item';
+      item.dataset.val = v;
+      item.textContent = v;
+      item.onclick = () => pickOption('hourSelect', v, 'hour');
+      hourList.appendChild(item);
+    }
+
+    // Build minute options: 00, 05, …, 55
+    const minuteList = document.querySelector('#minuteSelect .cs-list');
+    [0,5,10,15,20,25,30,35,40,45,50,55].forEach(m => {
+      const v = String(m).padStart(2, '0');
+      const item = document.createElement('div');
+      item.className = 'cs-item';
+      item.dataset.val = v;
+      item.textContent = v;
+      item.onclick = () => pickOption('minuteSelect', v, 'minute');
+      minuteList.appendChild(item);
+    });
+
+    function clearTime() {
+      selectedHour = '';
+      selectedMinute = '';
+      ['hourSelect', 'minuteSelect'].forEach(id => {
+        const el = document.getElementById(id);
+        el.querySelector('.cs-val').textContent = '--';
+        el.querySelector('.cs-btn').classList.remove('has-value');
+        el.querySelectorAll('.cs-item').forEach(i => i.classList.remove('active'));
+      });
+    }
+
+    function toggleDropdown(id) {
+      const el = document.getElementById(id);
+      const isOpen = el.classList.contains('open');
+      closeAllDropdowns();
+      if (!isOpen) el.classList.add('open');
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll('.custom-select.open').forEach(el => el.classList.remove('open'));
+    }
+
+    function pickOption(selectId, val, type) {
+      const el = document.getElementById(selectId);
+      el.querySelector('.cs-val').textContent = val;
+      el.querySelector('.cs-btn').classList.add('has-value');
+      el.querySelectorAll('.cs-item').forEach(i => i.classList.toggle('active', i.dataset.val === val));
+      closeAllDropdowns();
+      if (type === 'hour') selectedHour = val;
+      else selectedMinute = val;
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.custom-select')) closeAllDropdowns();
+    });
+
+    // Flatpickr
+    fp = flatpickr('#dueDate', {
+      dateFormat: 'd/m/Y',
+      disableMobile: true,
+      onChange: () => {
+        document.getElementById('dueDateWrap').classList.remove('date-error');
+        document.getElementById('dateError').classList.remove('visible');
+      }
+    });
+
+    // Theme
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('sp-theme', next);
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem('sp-theme')) {
+        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      }
+    });
 
     function setPriority(p) {
       selectedPriority = p;
       document.querySelectorAll('.priority-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.p === p);
       });
-    }
-
-    function clearDateError() {
-      document.getElementById('dueDateWrap').classList.remove('date-error');
-      document.getElementById('dateError').classList.remove('visible');
     }
 
     function selectTag(btn) {
@@ -413,10 +618,7 @@
     async function createTask() {
       const taskName = document.getElementById('taskName').value.trim();
 
-      if (!taskName) {
-        showMsg('Başlıq daxil edin', 'error');
-        return;
-      }
+      if (!taskName) { showMsg('Başlıq daxil edin', 'error'); return; }
 
       if (!selectedTag) {
         document.getElementById('tagsGrid').classList.add('has-error');
@@ -425,8 +627,7 @@
         return;
       }
 
-      const dueDateVal = document.getElementById('dueDate').value;
-      if (!dueDateVal) {
+      if (!fp.selectedDates.length) {
         document.getElementById('dueDateWrap').classList.add('date-error');
         document.getElementById('dateError').classList.add('visible');
         document.getElementById('dueDateWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -434,13 +635,11 @@
       }
 
       const description = document.getElementById('description').value.trim();
-      const dueDate = document.getElementById('dueDate').value;
-      const dueHour = document.getElementById('dueHour').value;
-      const dueMinute = document.getElementById('dueMinute').value;
-      const hasTime = dueDate && dueHour;
-      const isDatetime = !!hasTime;
-      const dueMin = dueMinute || '00';
-      const dueDatetime = dueDate ? (hasTime ? `${dueDate}T${dueHour}:${dueMin}` : dueDate) : null;
+      const dateStr = fp.formatDate(fp.selectedDates[0], 'Y-m-d');
+      const hasTime = selectedHour !== '';
+      const isDatetime = hasTime;
+      const dueMin = selectedMinute || '00';
+      const dueDatetime = hasTime ? `${dateStr}T${selectedHour}:${dueMin}` : dateStr;
 
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
@@ -450,14 +649,7 @@
         const res = await fetch('/api/create-task', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            taskName,
-            description,
-            priority: selectedPriority,
-            dueDate: dueDatetime,
-            isDatetime,
-            tags: [selectedTag]
-          })
+          body: JSON.stringify({ taskName, description, priority: selectedPriority, dueDate: dueDatetime, isDatetime, tags: [selectedTag] })
         });
 
         const data = await res.json();
@@ -467,13 +659,19 @@
           showMsg('İstəyiniz qeydə alındı! <a class="track-link" href="' + trackUrl + '" target="_blank">Sorğunun statusunu izlə →</a>', 'success');
           document.getElementById('taskName').value = '';
           document.getElementById('description').value = '';
-          document.getElementById('dueDate').value = '';
-          document.getElementById('dueHour').value = '';
-          document.getElementById('dueMinute').value = '';
+          fp.clear();
           selectedPriority = '';
           selectedTag = '';
+          selectedHour = '';
+          selectedMinute = '';
           document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
           document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
+          ['hourSelect', 'minuteSelect'].forEach(id => {
+            const el = document.getElementById(id);
+            el.querySelector('.cs-val').textContent = '--';
+            el.querySelector('.cs-btn').classList.remove('has-value');
+            el.querySelectorAll('.cs-item').forEach(i => i.classList.remove('active'));
+          });
         } else {
           showMsg('Xəta: ' + (data.error || 'Bilinməyən xəta'), 'error');
         }
@@ -483,19 +681,6 @@
 
       btn.disabled = false;
     }
-
-    function toggleTheme() {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('sp-theme', next);
-    }
-
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-      if (!localStorage.getItem('sp-theme')) {
-        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-      }
-    });
 
     function showMsg(text, type) {
       const el = document.getElementById('msg');
