@@ -396,11 +396,12 @@
       await loadTasks(token);
     }
 
-    function loadScript(src) {
+    function loadScript(src, pk) {
       return new Promise((resolve, reject) => {
         const s = document.createElement('script');
         s.src = src;
         s.crossOrigin = 'anonymous';
+        if (pk) s.setAttribute('data-clerk-publishable-key', pk);
         s.onload = resolve;
         s.onerror = reject;
         document.head.appendChild(s);
@@ -415,7 +416,7 @@
         const b64 = publishableKey.replace(/^pk_(test|live)_/, '');
         const frontendApi = 'https://' + atob(b64).replace(/\$$/, '');
 
-        await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`);
+        await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`, publishableKey);
 
         const clerk = new window.Clerk(publishableKey);
         await clerk.load();
