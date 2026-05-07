@@ -965,8 +965,13 @@
 
         await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`, publishableKey);
 
-        const clerk = window.Clerk;
-        await clerk.load();
+        const clerk = await new Promise((resolve, reject) => {
+          if (window.Clerk) return resolve(window.Clerk);
+          window.addEventListener('clerk:load', () => resolve(window.Clerk), { once: true });
+          setTimeout(() => reject(new Error('Clerk load timeout')), 8000);
+        });
+
+        if (!clerk.loaded) await clerk.load();
         window._clerk = clerk;
 
         clerk.addListener(({ user }) => {
