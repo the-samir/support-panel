@@ -373,7 +373,8 @@
       const dueMinute = document.getElementById('dueMinute').value;
       const hasTime = dueDate && dueHour;
       const isDatetime = !!hasTime;
-      const dueDatetime = dueDate ? (hasTime ? `${dueDate}T${dueHour}:${dueMinute || '00'}` : dueDate) : null;
+      const dueMin = dueMinute || '00';
+      const dueDatetime = dueDate ? (hasTime ? `${dueDate}T${dueHour}:${dueMin}` : dueDate) : null;
 
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
