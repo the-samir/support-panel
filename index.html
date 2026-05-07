@@ -85,11 +85,11 @@
     .theme-btn {
       margin-left: auto;
       background: transparent;
-      border: 1px solid transparent;
+      border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--muted);
       cursor: pointer;
-      padding: 3px 6px;
+      padding: 3px 8px;
       font-size: 14px;
       line-height: 1;
       transition: color 0.15s, border-color 0.15s;
@@ -97,7 +97,7 @@
 
     .theme-btn:hover {
       color: var(--text);
-      border-color: var(--border);
+      border-color: var(--border-hover);
     }
 
     [data-theme="dark"] .icon-moon { display: none; }
