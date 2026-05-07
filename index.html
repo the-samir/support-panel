@@ -206,7 +206,25 @@
       cursor: pointer;
       text-align: center;
       transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
+
+    .p-bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .p-bars b {
+      display: block;
+      width: 3px;
+      border-radius: 1px;
+      background: currentColor;
+      opacity: 0.2;
+    }
+    .p-bars b.on { opacity: 1; }
 
     .priority-btn:hover { border-color: var(--border-hover); color: var(--text); }
 
@@ -320,9 +338,9 @@
       <div class="field">
         <label>Prioritet</label>
         <div class="priority-group">
-          <button class="priority-btn" data-p="High" onclick="setPriority('High')">🔴 Yüksək</button>
-          <button class="priority-btn" data-p="Medium" onclick="setPriority('Medium')">🟡 Orta</button>
-          <button class="priority-btn" data-p="Low" onclick="setPriority('Low')">🟢 Aşağı</button>
+          <button class="priority-btn" data-p="High" onclick="setPriority('High')"><span class="p-bars"><b class="on" style="height:5px"></b><b class="on" style="height:9px"></b><b class="on" style="height:13px"></b></span>Yüksək</button>
+          <button class="priority-btn" data-p="Medium" onclick="setPriority('Medium')"><span class="p-bars"><b class="on" style="height:5px"></b><b class="on" style="height:9px"></b><b style="height:13px"></b></span>Orta</button>
+          <button class="priority-btn" data-p="Low" onclick="setPriority('Low')"><span class="p-bars"><b class="on" style="height:5px"></b><b style="height:9px"></b><b style="height:13px"></b></span>Aşağı</button>
         </div>
       </div>
 
