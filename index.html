@@ -68,6 +68,7 @@
       border-radius: 50%;
       background: var(--green);
       animation: pulse 2s infinite;
+      flex-shrink: 0;
     }
 
     @keyframes pulse {
@@ -83,8 +84,14 @@
       text-transform: uppercase;
     }
 
-    .theme-btn {
+    .logo-right {
       margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-btn {
       background: transparent;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -98,6 +105,39 @@
     .theme-btn:hover { color: var(--text); border-color: var(--border-hover); }
     [data-theme="dark"] .icon-moon { display: none; }
     [data-theme="light"] .icon-sun { display: none; }
+
+    /* User bar */
+    .user-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+    }
+    .user-bar.visible { display: flex; }
+    .user-name { font-size: 13px; color: var(--muted); }
+    .user-actions { display: flex; align-items: center; gap: 12px; }
+    .my-req-link {
+      font-size: 12px;
+      color: var(--green);
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .my-req-link:hover { opacity: 0.75; }
+    .signout-btn {
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .signout-btn:hover { color: var(--text); }
 
     h1 { font-size: 28px; font-weight: 300; line-height: 1.2; margin-bottom: 0.5rem; }
     .subtitle { font-size: 14px; color: var(--muted); line-height: 1.6; }
@@ -463,6 +503,42 @@
 
     .track-link { color: var(--green); text-decoration: none; display: inline-block; margin-top: 5px; font-size: 12px; opacity: 0.85; }
     .track-link:hover { opacity: 1; }
+
+    /* Auth card */
+    .auth-card-inner {
+      text-align: center;
+      padding: 1.5rem 0.5rem;
+    }
+    .auth-icon {
+      font-size: 32px;
+      margin-bottom: 1rem;
+      opacity: 0.6;
+    }
+    .auth-card-inner h2 {
+      font-weight: 400;
+      font-size: 20px;
+      margin-bottom: 0.5rem;
+    }
+    .auth-card-inner p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .auth-btn {
+      display: inline-block;
+      padding: 10px 28px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .auth-btn:hover { opacity: 0.88; }
   </style>
 </head>
 <body>
@@ -471,16 +547,43 @@
       <div class="logo">
         <div class="logo-dot"></div>
         <span class="logo-text">Support Panel</span>
-        <button class="theme-btn" onclick="toggleTheme()" aria-label="Tema dəyiş">
-          <span class="icon-sun">☀</span>
-          <span class="icon-moon">☽</span>
-        </button>
+        <div class="logo-right">
+          <button class="theme-btn" onclick="toggleTheme()" aria-label="Tema dəyiş">
+            <span class="icon-sun">☀</span>
+            <span class="icon-moon">☽</span>
+          </button>
+        </div>
       </div>
+
+      <div class="user-bar" id="userBar">
+        <span class="user-name" id="userNameEl"></span>
+        <div class="user-actions">
+          <a href="/my-requests" class="my-req-link">Sorğularım →</a>
+          <button class="signout-btn" onclick="window._clerk && window._clerk.signOut()">Çıxış</button>
+        </div>
+      </div>
+
       <h1>Yeni istək göndər</h1>
       <p class="subtitle">Probleminizi və ya təklifinizi göndərin, mümkün ən qısa zamanda baxılacaq.</p>
     </div>
 
-    <div class="card">
+    <!-- Loading state -->
+    <div class="card" id="loadingCard">
+      <div style="text-align:center; padding:1.5rem; color:var(--muted); font-size:14px;">Yüklənir...</div>
+    </div>
+
+    <!-- Auth gate (not signed in) -->
+    <div class="card" id="authCard" style="display:none">
+      <div class="auth-card-inner">
+        <div class="auth-icon">🔒</div>
+        <h2>Giriş tələb olunur</h2>
+        <p>Sorğu göndərmək və sorğularınızı izləmək üçün<br>hesabınıza giriş edin.</p>
+        <button class="auth-btn" onclick="window._clerk && window._clerk.openSignIn()">Giriş et →</button>
+      </div>
+    </div>
+
+    <!-- Main form (signed in) -->
+    <div class="card" id="mainCard" style="display:none">
       <div class="field">
         <label>Başlıq <span class="required-star">*</span></label>
         <input type="text" id="taskName" placeholder="Problemi qısaca ifadə edin..." />
@@ -759,10 +862,20 @@
       btn.disabled = true;
       showMsg('Göndərilir...', 'loading');
 
+      let authToken = '';
+      try {
+        if (window._clerk && window._clerk.session) {
+          authToken = await window._clerk.session.getToken();
+        }
+      } catch {}
+
       try {
         const res = await fetch('/api/create-task', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authToken ? { 'Authorization': 'Bearer ' + authToken } : {})
+          },
           body: JSON.stringify({ taskName, description, priority: selectedPriority, dueDate: dueDatetime, isDatetime, tags: [selectedTag] })
         });
 
@@ -801,6 +914,71 @@
       el.innerHTML = text;
       el.className = 'msg ' + type;
     }
+
+    // ── Clerk auth ──────────────────────────────────────────────
+    function showLoading() {
+      document.getElementById('loadingCard').style.display = 'block';
+      document.getElementById('authCard').style.display = 'none';
+      document.getElementById('mainCard').style.display = 'none';
+    }
+
+    function showAuthCard() {
+      document.getElementById('loadingCard').style.display = 'none';
+      document.getElementById('authCard').style.display = 'block';
+      document.getElementById('mainCard').style.display = 'none';
+      document.getElementById('userBar').classList.remove('visible');
+    }
+
+    function showFormCard(user) {
+      document.getElementById('loadingCard').style.display = 'none';
+      document.getElementById('authCard').style.display = 'none';
+      document.getElementById('mainCard').style.display = 'block';
+
+      const bar = document.getElementById('userBar');
+      const nameEl = document.getElementById('userNameEl');
+      if (user) {
+        const name = user.fullName || user.primaryEmailAddress?.emailAddress || '';
+        nameEl.textContent = name;
+        bar.classList.add('visible');
+      }
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.crossOrigin = 'anonymous';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    (async () => {
+      try {
+        const { publishableKey } = await fetch('/api/config').then(r => r.json());
+        if (!publishableKey) { showAuthCard(); return; }
+
+        const b64 = publishableKey.replace(/^pk_(test|live)_/, '');
+        const frontendApi = 'https://' + atob(b64).replace(/\$$/, '');
+
+        await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`);
+
+        const clerk = new window.Clerk(publishableKey);
+        await clerk.load();
+        window._clerk = clerk;
+
+        clerk.addListener(({ user }) => {
+          if (user) showFormCard(user);
+          else showAuthCard();
+        });
+
+        if (clerk.user) showFormCard(clerk.user);
+        else showAuthCard();
+      } catch (err) {
+        showAuthCard();
+      }
+    })();
   </script>
 </body>
 </html>

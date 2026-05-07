@@ -1,12 +1,16 @@
 import { randomBytes } from 'crypto';
+import { getAuthUserId } from './_clerk.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const userId = await getAuthUserId(req);
+  if (!userId) return res.status(401).json({ error: 'Giriş tələb olunur' });
 
   const { taskName, description, priority, dueDate, isDatetime, tags } = req.body;
 
@@ -18,7 +22,6 @@ export default async function handler(req, res) {
   if (!token) {
     return res.status(500).json({ error: 'Notion token tapılmadı' });
   }
-
 
   const trackingId = randomBytes(6).toString('hex');
 
@@ -34,6 +37,9 @@ export default async function handler(req, res) {
     },
     "Tracking ID": {
       rich_text: [{ text: { content: trackingId } }]
+    },
+    "User ID": {
+      rich_text: [{ text: { content: userId } }]
     }
   };
 
