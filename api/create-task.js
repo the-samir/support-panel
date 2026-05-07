@@ -69,7 +69,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         parent: { database_id: '1df0b457c8b48086b007e96a116faf27' },
-        template: { id: '1df0b457c8b480cd8368fc6834e161db' },
+        icon: { type: 'external', external: { url: 'https://www.notion.so/icons/checklist_lightgray.svg' } },
         properties
       })
     });
