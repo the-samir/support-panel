@@ -312,6 +312,60 @@
     .numInputWrapper span:after { border-top-color: var(--muted); border-bottom-color: var(--muted); }
     .numInputWrapper:hover { background: var(--bg); }
 
+    /* Custom month dropdown inside Flatpickr */
+    .fp-month-wrap { position: relative; display: inline-block; }
+
+    .fp-month-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .fp-month-btn:hover { background: var(--bg); }
+
+    .fp-month-list {
+      display: none;
+      position: fixed;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      z-index: 100000;
+      width: 110px;
+      max-height: 220px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .fp-month-list.open { display: block; }
+
+    .fp-month-item {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      text-align: left;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      transition: background 0.1s;
+    }
+    .fp-month-item:hover { background: var(--bg); }
+    .fp-month-item.active { color: var(--green); }
+
     /* Custom select dropdown */
     .custom-select { position: relative; user-select: none; }
 
@@ -570,10 +624,70 @@
       if (!e.target.closest('.custom-select')) closeAllDropdowns();
     });
 
+    const AZ_MONTHS = ['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+    let _monthBtn = null;
+    let _monthList = null;
+
+    function buildMonthSelect(sel, dateStr, instance) {
+      const native = instance.monthNav.querySelector('.flatpickr-monthDropdown-months');
+      if (!native) return;
+
+      _monthBtn = document.createElement('button');
+      _monthBtn.type = 'button';
+      _monthBtn.className = 'fp-month-btn';
+      _monthBtn.textContent = AZ_MONTHS[instance.currentMonth];
+
+      _monthList = document.createElement('div');
+      _monthList.className = 'fp-month-list';
+
+      AZ_MONTHS.forEach((name, idx) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'fp-month-item' + (idx === instance.currentMonth ? ' active' : '');
+        item.textContent = name;
+        item.addEventListener('click', e => {
+          e.stopPropagation();
+          instance.changeMonth(idx - instance.currentMonth);
+          _monthList.classList.remove('open');
+        });
+        _monthList.appendChild(item);
+      });
+
+      _monthBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const isOpen = _monthList.classList.contains('open');
+        _monthList.classList.remove('open');
+        if (!isOpen) {
+          const rect = _monthBtn.getBoundingClientRect();
+          _monthList.style.top = (rect.bottom + 4) + 'px';
+          _monthList.style.left = (rect.left + rect.width / 2) + 'px';
+          _monthList.classList.add('open');
+        }
+      });
+
+      native.replaceWith(_monthBtn);
+      document.body.appendChild(_monthList);
+
+      document.addEventListener('click', e => {
+        if (e.target !== _monthBtn && !_monthList.contains(e.target)) {
+          _monthList.classList.remove('open');
+        }
+      });
+    }
+
+    function updateMonthSelect(sel, dateStr, instance) {
+      if (_monthBtn) _monthBtn.textContent = AZ_MONTHS[instance.currentMonth];
+      if (_monthList) _monthList.querySelectorAll('.fp-month-item').forEach((item, idx) => {
+        item.classList.toggle('active', idx === instance.currentMonth);
+      });
+    }
+
     // Flatpickr
     fp = flatpickr('#dueDate', {
       dateFormat: 'd/m/Y',
       disableMobile: true,
+      onReady: buildMonthSelect,
+      onMonthChange: updateMonthSelect,
       onChange: () => {
         document.getElementById('dueDateWrap').classList.remove('date-error');
         document.getElementById('dateError').classList.remove('visible');
