@@ -965,7 +965,7 @@
 
         await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`, publishableKey);
 
-        const clerk = new window.Clerk(publishableKey);
+        const clerk = window.Clerk;
         await clerk.load();
         window._clerk = clerk;
 
