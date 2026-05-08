@@ -80,22 +80,42 @@
     .on-hold { background: rgba(128,128,128,.04); color: var(--muted); border: 1px solid var(--border); }
     .cancelled { background: rgba(248,113,113,.08); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
 
-    .status-sel {
-      appearance: none; -webkit-appearance: none;
-      border-radius: 7px; font-size: 12px; font-weight: 500;
-      font-family: inherit;
-      padding: 5px 26px 5px 11px; cursor: pointer; outline: none;
-      background-repeat: no-repeat; background-position: right 7px center;
-      background-size: 10px; transition: opacity .15s; flex-shrink: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+    .custom-select { position: relative; display: inline-block; }
+    .custom-select-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      font-family: inherit; cursor: pointer; border: 1px solid; user-select: none;
+      transition: opacity .15s;
     }
-    .status-sel:hover { opacity: .85; }
-    .status-sel:disabled { opacity: .45; cursor: not-allowed; }
-    .status-sel.not-started { background-color: rgba(128,128,128,.06); color: var(--muted); border: 1px solid var(--border); }
-    .status-sel.in-progress, .status-sel.in-review { background-color: rgba(96,165,250,.1); color: var(--blue); border: 1px solid rgba(96,165,250,.3); }
-    .status-sel.done { background-color: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.3); }
-    .status-sel.on-hold { background-color: rgba(128,128,128,.04); color: var(--muted); border: 1px solid var(--border); }
-    .status-sel.cancelled { background-color: rgba(248,113,113,.08); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
+    .custom-select-btn:hover { opacity: .85; }
+    .custom-select-btn svg { flex-shrink: 0; }
+    .custom-select-btn.not-started { background: rgba(128,128,128,.06); color: var(--muted); border-color: var(--border); }
+    .custom-select-btn.in-progress { background: rgba(96,165,250,.1); color: var(--blue); border-color: rgba(96,165,250,.3); }
+    .custom-select-btn.in-review   { background: rgba(96,165,250,.1); color: var(--blue); border-color: rgba(96,165,250,.3); }
+    .custom-select-btn.done        { background: rgba(74,222,128,.1); color: var(--green); border-color: rgba(74,222,128,.3); }
+    .custom-select-btn.on-hold     { background: rgba(128,128,128,.04); color: var(--muted); border-color: var(--border); }
+    .custom-select-btn.cancelled   { background: rgba(248,113,113,.08); color: var(--red); border-color: rgba(248,113,113,.2); }
+
+    .custom-select-dropdown {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; z-index: 100; min-width: 160px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    }
+    .custom-select-dropdown.open { display: block; }
+    .custom-select-option {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 14px; font-size: 13px; cursor: pointer;
+      transition: background .1s; font-family: inherit;
+    }
+    .custom-select-option:hover { background: rgba(255,255,255,.05); }
+    [data-theme="light"] .custom-select-option:hover { background: rgba(0,0,0,.04); }
+    .custom-select-option .opt-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .opt-not-started { background: var(--muted); }
+    .opt-in-progress { background: var(--blue); }
+    .opt-done        { background: var(--green); }
+    .opt-on-hold     { background: var(--muted); }
+    .opt-cancelled   { background: var(--red); }
 
     .divider { height: 1px; background: var(--border); margin: 1rem 0; }
     .meta { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
@@ -242,14 +262,22 @@
         currentPageId = data.pageId || null;
         const st = statusMap[data.status] || { label: data.status, cls: 'not-started', icon: '○' };
 
+        const optDotCls = { 'Not started':'opt-not-started','In progress':'opt-in-progress','In Review':'opt-in-progress','Done':'opt-done','On Hold':'opt-on-hold','Cancelled':'opt-cancelled' };
         const statusOptions = VALID_STATUSES.map(s =>
-          `<option value="${s}"${s === data.status ? ' selected' : ''}>${statusMap[s]?.label || s}</option>`
+          `<div class="custom-select-option" onclick="selectStatus('${s}')">` +
+          `<span class="opt-dot ${optDotCls[s] || 'opt-not-started'}"></span>${statusMap[s]?.label || s}</div>`
         ).join('');
 
         card.innerHTML =
           '<div class="task-title">' + escHtml(data.taskName) + '</div>' +
           '<div class="status-row">' +
-            '<select class="status-sel ' + st.cls + '" onchange="updateStatus(this)">' + statusOptions + '</select>' +
+            '<div class="custom-select" id="statusDropdown">' +
+              '<div class="custom-select-btn ' + st.cls + '" onclick="toggleDropdown()">' +
+                st.icon + ' ' + st.label +
+                '<svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" opacity=".5"><path d="M0 0l5 6 5-6z"/></svg>' +
+              '</div>' +
+              '<div class="custom-select-dropdown" id="statusOptions">' + statusOptions + '</div>' +
+            '</div>' +
           '</div>' +
           '<div class="divider"></div>' +
           (data.requester ? '<div class="meta"><span class="meta-label">Göndərən</span><span>' + escHtml(data.requester) + '</span></div>' : '') +
@@ -265,23 +293,34 @@
       }
     }
 
-    async function updateStatus(sel) {
-      const status = sel.value;
+    function toggleDropdown() {
+      document.getElementById('statusOptions')?.classList.toggle('open');
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#statusDropdown')) {
+        document.getElementById('statusOptions')?.classList.remove('open');
+      }
+    });
+
+    async function selectStatus(status) {
+      document.getElementById('statusOptions')?.classList.remove('open');
       if (!currentPageId) return;
 
+      const st = statusMap[status] || { label: status, cls: 'not-started', icon: '○' };
+      const btn = document.querySelector('.custom-select-btn');
+      if (btn) {
+        btn.className = 'custom-select-btn ' + st.cls;
+        btn.innerHTML = st.icon + ' ' + st.label +
+          '<svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor" opacity=".5"><path d="M0 0l5 6 5-6z"/></svg>';
+      }
+
       try {
-        const res = await fetch('/api/admin-update', {
+        await fetch('/api/admin-update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
           body: JSON.stringify({ pageId: currentPageId, status })
         });
-        const data = await res.json();
-        if (!data.success) sel.value = sel.getAttribute('data-prev') || sel.value;
-        else {
-          sel.setAttribute('data-prev', status);
-          const cls = statusMap[status]?.cls || 'not-started';
-          sel.className = 'status-sel ' + cls;
-        }
       } catch {}
     }
 
