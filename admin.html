@@ -80,13 +80,39 @@
     .search-input:focus { border-color: var(--border-hover); }
     .search-input::placeholder { color: var(--muted); }
     .flatpickr-input {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 12px;
+      background: var(--bg) !important; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text) !important; font-family: 'DM Sans', sans-serif; font-size: 12px;
       padding: 5px 11px; outline: none; cursor: pointer; transition: border-color .15s;
       width: 110px;
     }
     .flatpickr-input:focus { border-color: var(--border-hover); }
-    .flatpickr-input::placeholder { color: var(--muted); }
+    .flatpickr-input::placeholder { color: var(--muted) !important; }
+
+    .fp-month-btn {
+      appearance: none; -webkit-appearance: none;
+      background: transparent; border: none; outline: none;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      padding: 2px 6px; border-radius: 4px; transition: background .15s;
+    }
+    .fp-month-btn:hover { background: var(--bg); }
+    .fp-month-list {
+      display: none; position: fixed; transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; z-index: 100000; width: 110px;
+      max-height: 220px; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .fp-month-list.open { display: block; }
+    .fp-month-item {
+      appearance: none; -webkit-appearance: none; width: 100%;
+      background: transparent; border: none; outline: none;
+      text-align: left; padding: 8px 14px; cursor: pointer;
+      font-size: 13px; font-family: 'DM Sans', sans-serif;
+      color: var(--text); transition: background .1s;
+    }
+    .fp-month-item:hover { background: var(--bg); }
+    .fp-month-item.active { color: var(--green); }
     .flatpickr-calendar {
       background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,.3); font-family: 'DM Sans', sans-serif;
@@ -540,15 +566,74 @@
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 
-    const fpConfig = {
+    const AZ_MONTHS = ['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+
+    function makeFpMonthHandlers() {
+      let btn = null, list = null;
+
+      function build(sel, dateStr, instance) {
+        const native = instance.monthNav.querySelector('.flatpickr-monthDropdown-months');
+        if (!native) return;
+        btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'fp-month-btn';
+        btn.textContent = AZ_MONTHS[instance.currentMonth];
+
+        list = document.createElement('div');
+        list.className = 'fp-month-list';
+        AZ_MONTHS.forEach((name, idx) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'fp-month-item' + (idx === instance.currentMonth ? ' active' : '');
+          item.textContent = name;
+          item.addEventListener('click', e => {
+            e.stopPropagation();
+            instance.changeMonth(idx - instance.currentMonth);
+            list.classList.remove('open');
+          });
+          list.appendChild(item);
+        });
+
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const isOpen = list.classList.contains('open');
+          document.querySelectorAll('.fp-month-list').forEach(l => l.classList.remove('open'));
+          if (!isOpen) {
+            const rect = btn.getBoundingClientRect();
+            list.style.top = (rect.bottom + 4) + 'px';
+            list.style.left = (rect.left + rect.width / 2) + 'px';
+            list.classList.add('open');
+          }
+        });
+
+        native.replaceWith(btn);
+        document.body.appendChild(list);
+        document.addEventListener('click', e => {
+          if (e.target !== btn && !list.contains(e.target)) list.classList.remove('open');
+        });
+      }
+
+      function update(sel, dateStr, instance) {
+        if (btn) btn.textContent = AZ_MONTHS[instance.currentMonth];
+        if (list) list.querySelectorAll('.fp-month-item').forEach((item, idx) => {
+          item.classList.toggle('active', idx === instance.currentMonth);
+        });
+      }
+
+      return { build, update };
+    }
+
+    const fpConfig = (handlers) => ({
       dateFormat: 'Y-m-d',
       altInput: true,
       altFormat: 'd/m/Y',
       disableMobile: true,
+      onReady: handlers.build,
+      onMonthChange: handlers.update,
       onChange: () => applyFilters()
-    };
-    flatpickr('#dateFrom', fpConfig);
-    flatpickr('#dateTo', fpConfig);
+    });
+
+    flatpickr('#dateFrom', fpConfig(makeFpMonthHandlers()));
+    flatpickr('#dateTo', fpConfig(makeFpMonthHandlers()));
   </script>
 </body>
 </html>
