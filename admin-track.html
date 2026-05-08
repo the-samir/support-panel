@@ -353,12 +353,9 @@
     }
 
     async function init() {
-      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
-      try {
-        await Promise.race([window.Clerk.load(), timeout]);
-      } catch {}
+      if (!window.Clerk) return;
 
-      const user = window.Clerk?.user;
+      const user = window.Clerk.user;
       if (!user) {
         document.getElementById('authCard').style.display = 'block';
         document.getElementById('signInBtn').onclick = () => window.Clerk.openSignIn();
@@ -378,13 +375,16 @@
 
       document.getElementById('mainContent').style.display = 'block';
       await loadStatus();
+      loadComments();
       setInterval(loadComments, 3000);
       setInterval(loadStatus, 30000);
-      loadComments();
     }
 
-    document.addEventListener('clerk:load', init);
-    setTimeout(init, 8000);
+    if (window.Clerk) {
+      init();
+    } else {
+      document.addEventListener('clerk:load', init, { once: true });
+    }
   </script>
 </body>
 </html>
