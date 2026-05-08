@@ -507,6 +507,24 @@
     .msg.error { display: block; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--red); }
     .msg.loading { display: block; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); }
 
+    .track-link { color: var(--green); text-decoration: none; display: inline-block; margin-top: 5px; font-size: 12px; opacity: 0.85; }
+    .track-link:hover { opacity: 1; }
+    .copy-btn {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 3px 10px;
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 6px;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      color: var(--green);
+      cursor: pointer;
+      transition: background 0.15s;
+      vertical-align: middle;
+    }
+    .copy-btn:hover { background: rgba(74,222,128,0.08); }
+
     .file-hint-wrap { position: relative; display: inline-block; }
     .file-hint-btn {
       background: none;
@@ -623,6 +641,16 @@
     </div>
 
     <div class="card" id="mainCard">
+      <div class="field" id="nameField">
+        <label>Ad <span class="required-star">*</span></label>
+        <input type="text" id="requesterName" placeholder="Adınızı daxil edin..." autocomplete="name" />
+      </div>
+
+      <!-- honeypot: botlar üçün, real istifadəçilər görmür -->
+      <div style="position:absolute;left:-9999px;opacity:0;pointer-events:none" aria-hidden="true">
+        <input type="text" id="hpField" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+
       <div class="field">
         <label>Başlıq <span class="required-star">*</span></label>
         <input type="text" id="taskName" placeholder="Problemi qısaca ifadə edin..." />
@@ -716,6 +744,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
     let selectedPriority = '';
     let selectedTag = '';
@@ -899,9 +928,21 @@
     }
 
     async function createTask() {
-      const taskName = document.getElementById('taskName').value.trim();
+      // Honeypot yoxlaması
+      if (document.getElementById('hpField').value) return;
 
+      const taskName = document.getElementById('taskName').value.trim();
       if (!taskName) { showMsg('Başlıq daxil edin', 'error'); return; }
+
+      // Ad yoxlaması (yalnız guest üçün)
+      const nameField = document.getElementById('nameField');
+      let requesterName = '';
+      if (nameField.style.display !== 'none') {
+        requesterName = document.getElementById('requesterName').value.trim();
+        if (!requesterName) { showMsg('Adınızı daxil edin', 'error'); document.getElementById('requesterName').focus(); return; }
+      } else {
+        requesterName = window._clerk?.user?.fullName || window._clerk?.user?.primaryEmailAddress?.emailAddress || '';
+      }
 
       if (!selectedTag) {
         document.getElementById('tagsGrid').classList.add('has-error');
@@ -942,7 +983,7 @@
             'Content-Type': 'application/json',
             ...(authToken ? { 'Authorization': 'Bearer ' + authToken } : {})
           },
-          body: JSON.stringify({ taskName, description, priority: selectedPriority, dueDate: dueDatetime, isDatetime, tags: [selectedTag] })
+          body: JSON.stringify({ taskName, description, priority: selectedPriority, dueDate: dueDatetime, isDatetime, tags: [selectedTag], requesterName })
         });
 
         const data = await res.json();
@@ -953,9 +994,24 @@
           localStorage.setItem('sp-tickets', JSON.stringify(stored.slice(0, 100)));
 
           const trackUrl = '/track.html?id=' + data.trackingId;
-          showMsg('İstəyiniz qeydə alındı! <a class="track-link" href="' + trackUrl + '" target="_blank">Sorğunun statusunu izlə →</a>', 'success');
+          const tid = data.trackingId;
+          showMsg(
+            'İstəyiniz qeydə alındı! <a class="track-link" href="' + trackUrl + '" target="_blank">Statusu izlə →</a>' +
+            '<br><button class="copy-btn" onclick="copyId(\'' + tid + '\', this)">ID kopyala</button>',
+            'success'
+          );
+
+          // Confetti
+          if (typeof confetti === 'function') {
+            confetti({ particleCount: 80, spread: 70, origin: { y: 0.7 }, colors: ['#4ade80','#e8e8e8','#60a5fa'] });
+          }
+
+          // Tab indicator sıfırla
+          setTabDirty(false);
+
           document.getElementById('taskName').value = '';
           document.getElementById('description').value = '';
+          document.getElementById('requesterName').value = '';
           fp.clear();
           selectedPriority = '';
           selectedTag = '';
@@ -979,24 +1035,44 @@
       btn.disabled = false;
     }
 
+    function copyId(tid, btn) {
+      navigator.clipboard.writeText(tid).then(() => {
+        btn.textContent = 'Kopyalandı ✓';
+        setTimeout(() => { btn.textContent = 'ID kopyala'; }, 2000);
+      });
+    }
+
     function showMsg(text, type) {
       const el = document.getElementById('msg');
       el.innerHTML = text;
       el.className = 'msg ' + type;
     }
 
+    // ── Tab dirty indicator ──────────────────────────────────────
+    const _baseTitle = document.title;
+    function setTabDirty(dirty) {
+      document.title = dirty ? '● ' + _baseTitle : _baseTitle;
+    }
+    document.addEventListener('input', e => {
+      if (e.target.closest('#mainCard')) setTabDirty(true);
+    });
+
     // ── Clerk auth ──────────────────────────────────────────────
     function updateUserBar(user) {
       const nameEl = document.getElementById('userNameEl');
       const userBar = document.getElementById('userBar');
       const guestNote = document.getElementById('guestNote');
+      const nameField = document.getElementById('nameField');
       if (user) {
         nameEl.textContent = user.fullName || user.primaryEmailAddress?.emailAddress || '';
         userBar.classList.add('visible');
         guestNote.style.display = 'none';
+        nameField.style.display = 'none';
       } else {
+        nameEl.textContent = '';
         userBar.classList.remove('visible');
         guestNote.style.display = '';
+        nameField.style.display = '';
       }
     }
 

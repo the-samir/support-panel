@@ -261,6 +261,7 @@
 
         loadComments();
         setInterval(loadComments, 3000);
+        setInterval(loadStatus, 30000);
       } catch (err) {
         card.innerHTML = '<div class="error-state">Bağlantı xətası</div>';
       }

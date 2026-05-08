@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import { getAuthUserId } from './_clerk.js';
+import { validateEnv } from './_validateEnv.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,10 +9,14 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!validateEnv(res)) return;
 
   const userId = await getAuthUserId(req) || '';
 
-  const { taskName, description, priority, dueDate, isDatetime, tags } = req.body;
+  const { taskName, description, priority, dueDate, isDatetime, tags, requesterName, website } = req.body;
+
+  // Honeypot
+  if (website) return res.status(400).json({ error: 'Spam aşkarlandı' });
 
   if (!taskName || !taskName.trim()) {
     return res.status(400).json({ error: 'Task adı boş ola bilməz' });
@@ -39,6 +44,9 @@ export default async function handler(req, res) {
     },
     "User ID": {
       rich_text: [{ text: { content: userId } }]
+    },
+    "Requester": {
+      rich_text: [{ text: { content: (requesterName || '').trim() } }]
     }
   };
 
