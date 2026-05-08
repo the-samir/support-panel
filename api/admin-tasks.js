@@ -17,16 +17,17 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Token tapılmadı' });
 
   const { status, priority } = req.query;
-  const filters = [];
+  const filters = [
+    { property: 'Project', relation: { contains: '35a0b457-c8b4-80cb-a23a-f0818b68b089' } }
+  ];
   if (status) filters.push({ property: 'Status', status: { equals: status } });
   if (priority) filters.push({ property: 'Priority', select: { equals: priority } });
 
   const body = {
     sorts: [{ timestamp: 'created_time', direction: 'descending' }],
-    page_size: 100
+    page_size: 100,
+    filter: { and: filters }
   };
-  if (filters.length === 1) body.filter = filters[0];
-  else if (filters.length > 1) body.filter = { and: filters };
 
   try {
     const notionRes = await fetch(`https://api.notion.com/v1/databases/${DB}/query`, {

@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       status: { name: "Not started" }
     },
     "Project": {
-      relation: [{ id: "2150b457-c8b4-8066-b07c-f4fabd8098b4" }]
+      relation: [{ id: "35a0b457-c8b4-80cb-a23a-f0818b68b089" }]
     },
     "Tracking ID": {
       rich_text: [{ text: { content: trackingId } }]
