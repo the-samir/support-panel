@@ -263,7 +263,7 @@
         const st = statusMap[data.status] || { label: data.status, cls: 'not-started', icon: '○' };
 
         const optDotCls = { 'Not started':'opt-not-started','In progress':'opt-in-progress','In Review':'opt-in-progress','Done':'opt-done','On Hold':'opt-on-hold','Cancelled':'opt-cancelled' };
-        const statusOptions = VALID_STATUSES.map(s =>
+        const statusOptions = VALID_STATUSES.filter(s => s !== data.status).map(s =>
           `<div class="custom-select-option" onclick="selectStatus('${s}')">` +
           `<span class="opt-dot ${optDotCls[s] || 'opt-not-started'}"></span>${statusMap[s]?.label || s}</div>`
         ).join('');

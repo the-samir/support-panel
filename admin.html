@@ -231,10 +231,10 @@
 
     function statusSelectHtml(current, pageId) {
       const cls = statusMap[current]?.cls || 'not-started';
-      const opts = statusOrder.map(s =>
-        `<option value="${s}"${s === current ? ' selected' : ''}>${statusMap[s]?.label || s}</option>`
+      const opts = statusOrder.filter(s => s !== current).map(s =>
+        `<option value="${s}">${statusMap[s]?.label || s}</option>`
       ).join('');
-      return `<select class="status-sel ${cls}" data-page="${esc(pageId)}" onchange="updateStatus(this)">${opts}</select>`;
+      return `<select class="status-sel ${cls}" data-page="${esc(pageId)}" onchange="updateStatus(this)"><option value="${current}" selected>${statusMap[current]?.label || current}</option>${opts}</select>`;
     }
 
     function renderTasks(tasks) {
