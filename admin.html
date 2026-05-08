@@ -72,6 +72,28 @@
     .check-btn:hover { border-color: var(--border-hover); color: var(--text); }
     .check-btn:disabled { opacity: .5; cursor: not-allowed; }
 
+    /* Search & date filters */
+    .filters-row2 { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .search-input {
+      flex: 1; min-width: 160px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 12px;
+      padding: 5px 11px; outline: none; transition: border-color .15s;
+    }
+    .search-input:focus { border-color: var(--border-hover); }
+    .search-input::placeholder { color: var(--muted); }
+    .date-input {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 12px;
+      padding: 5px 9px; outline: none; cursor: pointer; transition: border-color .15s;
+      color-scheme: dark;
+    }
+    [data-theme="light"] .date-input { color-scheme: light; }
+    .date-input:focus { border-color: var(--border-hover); }
+    .date-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .clear-dates { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 0 2px; transition: color .15s; }
+    .clear-dates:hover { color: var(--text); }
+
     .task-count { font-size: 12px; color: var(--muted); margin-bottom: .75rem; }
 
     /* Task items */
@@ -160,6 +182,15 @@
           <option value="Low">Aşağı</option>
         </select>
         <button class="check-btn" id="checkBtn" onclick="checkUnread()">💬 Mesajları yoxla</button>
+      </div>
+
+      <div class="filters-row2">
+        <input class="search-input" id="searchInput" placeholder="Ad və ya Tracking ID ilə axtar..." oninput="applyFilters()" />
+        <span class="date-label">Dan:</span>
+        <input class="date-input" id="dateFrom" type="date" onchange="applyFilters()" />
+        <span class="date-label">—</span>
+        <input class="date-input" id="dateTo" type="date" onchange="applyFilters()" />
+        <button class="clear-dates" onclick="clearDates()" title="Tarixi sıfırla">✕</button>
       </div>
 
       <div class="task-count" id="taskCount"></div>
@@ -254,11 +285,29 @@
       applyFilters();
     }
 
+    function clearDates() {
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      applyFilters();
+    }
+
     function applyFilters() {
       const priority = document.getElementById('priorityFilter').value;
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+
       let filtered = allTasks;
       if (currentStatus) filtered = filtered.filter(t => t.status === currentStatus);
       if (priority) filtered = filtered.filter(t => t.priority === priority);
+      if (search) filtered = filtered.filter(t =>
+        (t.taskName || '').toLowerCase().includes(search) ||
+        (t.trackingId || '').toLowerCase().includes(search) ||
+        (t.requester || '').toLowerCase().includes(search)
+      );
+      if (dateFrom) filtered = filtered.filter(t => t.createdTime && t.createdTime.slice(0, 10) >= dateFrom);
+      if (dateTo) filtered = filtered.filter(t => t.createdTime && t.createdTime.slice(0, 10) <= dateTo);
+
       renderTasks(filtered);
     }
 
