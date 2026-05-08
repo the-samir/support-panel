@@ -229,6 +229,7 @@
     let currentStatus = '';
     let allTasks = [];
     let authToken = '';
+    const unreadSet = new Set();
 
     function toggleTheme() {
       const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -304,6 +305,15 @@
       } catch { alert('Bağlantı xətası'); }
     }
 
+    function applyUnread() {
+      unreadSet.forEach(pageId => {
+        const el = document.getElementById('ti-' + pageId);
+        const badge = document.getElementById('ub-' + pageId);
+        if (el) el.classList.add('has-unread');
+        if (badge && !badge.innerHTML) badge.innerHTML = '<span class="unread-dot">● Cavabsız mesaj</span>';
+      });
+    }
+
     function renderTasks(tasks) {
       document.getElementById('taskCount').textContent = tasks.length + ' sorğu';
       const list = document.getElementById('taskList');
@@ -339,6 +349,7 @@
             </div>
           </div>`;
       }).join('');
+      applyUnread();
     }
 
     function setStatus(btn, status) {
@@ -400,11 +411,13 @@
           const comments = data.comments || [];
           const last = comments[comments.length - 1];
           if (last?.isUser) {
-            el.classList.add('has-unread');
-            badge.innerHTML = '<span class="unread-dot">● Cavabsız mesaj</span>';
+            unreadSet.add(task.pageId);
+            if (el) { el.classList.add('has-unread'); }
+            if (badge) badge.innerHTML = '<span class="unread-dot">● Cavabsız mesaj</span>';
           } else {
-            el.classList.remove('has-unread');
-            badge.innerHTML = comments.length ? `<span class="meta-text">${comments.length} mesaj</span>` : '';
+            unreadSet.delete(task.pageId);
+            if (el) el.classList.remove('has-unread');
+            if (badge) badge.innerHTML = comments.length ? `<span class="meta-text">${comments.length} mesaj</span>` : '';
           }
         } catch {}
       }));
