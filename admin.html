@@ -220,7 +220,7 @@
       }
 
       list.innerHTML = tasks.map(t => {
-        const trackHref = t.trackingId ? `/track.html?id=${esc(t.trackingId)}` : '#';
+        const trackHref = t.trackingId ? `/admin-track?id=${esc(t.trackingId)}` : '#';
         const priorityHtml = t.priority
           ? `<span class="priority-dot"><span style="background:${priorityColors[t.priority]}"></span>${esc(priorityLabels[t.priority])}</span>`
           : '';

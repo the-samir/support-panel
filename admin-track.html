@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Sorğu</title>
+  <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+    data-clerk-publishable-key="pk_live_Y2xlcmsuYXpzb2Z0d2FyZS5heiQ"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #171717;
+      --border: #262626;
+      --border-hover: #333;
+      --text: #e8e8e8;
+      --muted: #666;
+      --green: #4ade80;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --blue: #60a5fa;
+      --orange: #fb923c;
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f5f3;
+      --surface: #ffffff;
+      --border: #e0e0da;
+      --border-hover: #c8c8c0;
+      --text: #1a1a1a;
+      --muted: #999;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #d97706;
+      --blue: #2563eb;
+      --orange: #ea580c;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .wrap { width: 100%; max-width: 540px; }
+
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+    .logo-text { font-size: 13px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
+    .admin-badge { margin-left: auto; font-size: 11px; background: rgba(251,146,60,.1); color: var(--orange); border: 1px solid rgba(251,146,60,.3); padding: 3px 9px; border-radius: 6px; font-weight: 500; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .loading { text-align: center; color: var(--muted); font-size: 14px; padding: 2rem 0; }
+    .error-state { text-align: center; color: var(--red); font-size: 14px; padding: 2rem 0; }
+
+    #authCard, #deniedCard { text-align: center; padding: 3rem 1rem; }
+    #authCard p, #deniedCard p { color: var(--muted); font-size: 14px; margin-bottom: 1.25rem; }
+    .btn { display: inline-block; padding: 9px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: opacity .15s; }
+    .btn-primary { background: var(--text); color: var(--bg); }
+    .btn-primary:hover { opacity: .85; }
+
+    .task-title { font-size: 20px; font-weight: 400; margin-bottom: 1rem; line-height: 1.3; }
+
+    .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+    .not-started { background: rgba(128,128,128,.06); color: var(--muted); border: 1px solid var(--border); }
+    .in-progress { background: rgba(96,165,250,.1); color: var(--blue); border: 1px solid rgba(96,165,250,.3); }
+    .done { background: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.3); }
+    .on-hold { background: rgba(128,128,128,.04); color: var(--muted); border: 1px solid var(--border); }
+    .cancelled { background: rgba(248,113,113,.08); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
+
+    .status-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 5px 9px;
+      cursor: pointer;
+      outline: none;
+    }
+    .status-select:focus { border-color: var(--border-hover); }
+
+    .divider { height: 1px; background: var(--border); margin: 1rem 0; }
+    .meta { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
+    .meta-label { color: var(--muted); }
+
+    .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 14px; }
+
+    .messages { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; min-height: 60px; max-height: 400px; overflow-y: auto; scroll-behavior: smooth; }
+    .msg-row { display: flex; flex-direction: column; gap: 3px; }
+    .msg-row.mine { align-items: flex-end; }
+    .msg-row.theirs { align-items: flex-start; }
+
+    .bubble { padding: 9px 13px; border-radius: 10px; font-size: 13px; line-height: 1.5; max-width: 85%; white-space: pre-wrap; word-break: break-word; }
+    .bubble.mine { background: rgba(251,146,60,.12); color: var(--orange); border: 1px solid rgba(251,146,60,.2); border-bottom-right-radius: 3px; }
+    .bubble.theirs { background: rgba(128,128,128,.1); color: var(--text); border-bottom-left-radius: 3px; }
+
+    .msg-meta { font-size: 11px; color: var(--muted); padding: 0 4px; }
+    .msg-who { color: var(--orange); }
+    .msg-who-user { color: var(--muted); }
+    .no-messages { font-size: 13px; color: var(--muted); text-align: center; padding: 1rem 0; }
+
+    .input-row { display: flex; gap: 8px; }
+    .msg-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 9px 13px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .msg-input:focus { border-color: var(--border-hover); }
+    .msg-input::placeholder { color: var(--muted); }
+
+    .send-btn {
+      padding: 9px 16px;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity .15s;
+      white-space: nowrap;
+    }
+    .send-btn:hover { opacity: .88; }
+    .send-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+    .send-error { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
+    .send-error.visible { display: block; }
+
+    .tracking-id { font-size: 11px; color: var(--muted); margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); font-family: monospace; }
+    .back-link { display: inline-block; margin-top: 1.5rem; font-size: 13px; color: var(--muted); text-decoration: none; transition: color .15s; }
+    .back-link:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">Support Panel</span>
+      <span class="admin-badge">Admin</span>
+    </div>
+
+    <div class="card" id="authCard" style="display:none">
+      <p>Bu səhifə yalnız adminlər üçündür.</p>
+      <button class="btn btn-primary" id="signInBtn">Daxil ol</button>
+    </div>
+
+    <div class="card" id="deniedCard" style="display:none">
+      <p>Bu səhifəyə girişiniz yoxdur.</p>
+      <a href="/" class="btn btn-primary" style="text-decoration:none">Ana səhifəyə qayıt</a>
+    </div>
+
+    <div id="mainContent" style="display:none">
+      <div class="card" id="statusCard">
+        <div class="loading">Yüklənir...</div>
+      </div>
+
+      <div class="card" id="chatCard" style="display:none">
+        <div class="section-label">Mesajlar</div>
+        <div class="messages" id="messages">
+          <div class="no-messages">Hələ mesaj yoxdur</div>
+        </div>
+        <div class="input-row">
+          <input class="msg-input" id="msgInput" placeholder="Samir adından cavab yaz..." onkeydown="handleKey(event)" />
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">Göndər</button>
+        </div>
+        <div class="send-error" id="sendError"></div>
+      </div>
+
+      <div class="tracking-id" id="trackingIdLabel" style="display:none"></div>
+      <a href="/admin" class="back-link">← Admin panelə qayıt</a>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const trackingId = params.get('id');
+    let lastCommentCount = -1;
+    let authToken = null;
+
+    const VALID_STATUSES = ['Not started', 'In progress', 'In Review', 'Done', 'On Hold', 'Cancelled'];
+    const statusMap = {
+      'Not started': { label: 'Başlanmayıb', cls: 'not-started', icon: '○' },
+      'In progress': { label: 'İcrada', cls: 'in-progress', icon: '◑' },
+      'In Review':   { label: 'Yoxlanılır', cls: 'in-progress', icon: '◑' },
+      'Done':        { label: 'Tamamlandı', cls: 'done', icon: '●' },
+      'On Hold':     { label: 'Gözləmədə', cls: 'on-hold', icon: '◌' },
+      'Cancelled':   { label: 'Ləğv edildi', cls: 'cancelled', icon: '✕' },
+    };
+    const priorityLabels = { High: '🔴 Yüksək', Medium: '🟡 Orta', Low: '🟢 Aşağı' };
+    const priorityCls = { High: 'var(--red)', Medium: 'var(--yellow)', Low: 'var(--green)' };
+
+    function formatDate(d) {
+      if (!d) return null;
+      return new Date(d).toLocaleDateString('az-AZ', { day:'2-digit', month:'2-digit', year:'numeric' });
+    }
+    function formatTime(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleTimeString('az-AZ', { hour:'2-digit', minute:'2-digit' });
+    }
+    function escHtml(t) {
+      return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    let currentPageId = null;
+
+    async function loadStatus() {
+      const card = document.getElementById('statusCard');
+      if (!trackingId) { card.innerHTML = '<div class="error-state">Tracking ID tapılmadı</div>'; return; }
+
+      try {
+        const res = await fetch('/api/track?id=' + trackingId);
+        const data = await res.json();
+
+        if (!data.success) { card.innerHTML = '<div class="error-state">' + (data.error || 'Sorğu tapılmadı') + '</div>'; return; }
+
+        currentPageId = data.pageId || null;
+        const st = statusMap[data.status] || { label: data.status, cls: 'not-started', icon: '○' };
+
+        const statusOptions = VALID_STATUSES.map(s =>
+          `<option value="${s}"${s === data.status ? ' selected' : ''}>${statusMap[s]?.label || s}</option>`
+        ).join('');
+
+        card.innerHTML =
+          '<div class="task-title">' + escHtml(data.taskName) + '</div>' +
+          '<div class="status-row">' +
+            '<div class="status-badge ' + st.cls + '">' + st.icon + ' ' + st.label + '</div>' +
+            '<select class="status-select" onchange="updateStatus(this)">' + statusOptions + '</select>' +
+          '</div>' +
+          '<div class="divider"></div>' +
+          (data.requester ? '<div class="meta"><span class="meta-label">Göndərən</span><span>' + escHtml(data.requester) + '</span></div>' : '') +
+          (data.priority ? '<div class="meta"><span class="meta-label">Prioritet</span><span style="color:' + (priorityCls[data.priority] || 'var(--text)') + '">' + (priorityLabels[data.priority] || data.priority) + '</span></div>' : '') +
+          (data.dueDate ? '<div class="meta"><span class="meta-label">Son tarix</span><span>' + formatDate(data.dueDate) + '</span></div>' : '') +
+          '<div class="meta"><span class="meta-label">Göndərildi</span><span>' + formatDate(data.createdTime) + '</span></div>';
+
+        document.getElementById('chatCard').style.display = 'block';
+        document.getElementById('trackingIdLabel').style.display = 'block';
+        document.getElementById('trackingIdLabel').textContent = 'ID: ' + trackingId;
+      } catch (err) {
+        card.innerHTML = '<div class="error-state">Bağlantı xətası</div>';
+      }
+    }
+
+    async function updateStatus(sel) {
+      const status = sel.value;
+      if (!currentPageId) return;
+
+      try {
+        const res = await fetch('/api/admin-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+          body: JSON.stringify({ pageId: currentPageId, status })
+        });
+        const data = await res.json();
+        if (!data.success) sel.value = sel.getAttribute('data-prev') || sel.value;
+        else sel.setAttribute('data-prev', status);
+      } catch {}
+    }
+
+    async function loadComments() {
+      try {
+        const res = await fetch('/api/comments?id=' + trackingId);
+        const data = await res.json();
+        if (!data.success) return;
+
+        const count = data.comments?.length || 0;
+        if (count === lastCommentCount) return;
+
+        const container = document.getElementById('messages');
+        const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
+
+        if (count === 0) {
+          container.innerHTML = '<div class="no-messages">Hələ mesaj yoxdur</div>';
+        } else {
+          container.innerHTML = data.comments.map(c => {
+            const isMine = c.isAdmin;
+            return '<div class="msg-row ' + (isMine ? 'mine' : 'theirs') + '">' +
+              (isMine ? '<span class="msg-meta msg-who">Samir</span>' : '<span class="msg-meta msg-who-user">İstifadəçi</span>') +
+              '<div class="bubble ' + (isMine ? 'mine' : 'theirs') + '">' + escHtml(c.text) + '</div>' +
+              '<span class="msg-meta">' + formatTime(c.time) + '</span>' +
+            '</div>';
+          }).join('');
+
+          if (wasAtBottom || lastCommentCount === -1) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }
+
+        lastCommentCount = count;
+      } catch {}
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const btn = document.getElementById('sendBtn');
+      const errEl = document.getElementById('sendError');
+      const text = input.value.trim();
+      if (!text) return;
+
+      btn.disabled = true;
+      errEl.classList.remove('visible');
+
+      try {
+        const res = await fetch('/api/admin-comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+          body: JSON.stringify({ trackingId, message: text })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          input.value = '';
+          lastCommentCount = -1;
+          await loadComments();
+        } else {
+          errEl.textContent = data.error || 'Göndərilmədi';
+          errEl.classList.add('visible');
+        }
+      } catch {
+        errEl.textContent = 'Bağlantı xətası';
+        errEl.classList.add('visible');
+      }
+
+      btn.disabled = false;
+      input.focus();
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    async function init() {
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
+      try {
+        await Promise.race([window.Clerk.load(), timeout]);
+      } catch {}
+
+      const user = window.Clerk?.user;
+      if (!user) {
+        document.getElementById('authCard').style.display = 'block';
+        document.getElementById('signInBtn').onclick = () => window.Clerk.openSignIn();
+        return;
+      }
+
+      authToken = await window.Clerk.session.getToken();
+
+      const testRes = await fetch('/api/admin-tasks', {
+        headers: { 'Authorization': 'Bearer ' + authToken }
+      });
+
+      if (testRes.status === 403) {
+        document.getElementById('deniedCard').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('mainContent').style.display = 'block';
+      await loadStatus();
+      setInterval(loadComments, 3000);
+      setInterval(loadStatus, 30000);
+      loadComments();
+    }
+
+    document.addEventListener('clerk:load', init);
+    setTimeout(init, 8000);
+  </script>
+</body>
+</html>

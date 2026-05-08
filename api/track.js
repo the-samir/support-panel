@@ -46,14 +46,17 @@ export default async function handler(req, res) {
     const priority = props['Priority']?.select?.name || null;
     const dueDate = props['Due date']?.date?.start || null;
     const createdTime = page.created_time;
+    const requester = props['Requester']?.rich_text?.[0]?.text?.content || null;
 
     return res.status(200).json({
       success: true,
+      pageId: page.id,
       taskName,
       status,
       priority,
       dueDate,
-      createdTime
+      createdTime,
+      requester
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
