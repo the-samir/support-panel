@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — Sorğu</title>
-  <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
-    data-clerk-publishable-key="pk_live_Y2xlcmsuYXpzb2Z0d2FyZS5heiQ"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -352,38 +350,60 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     }
 
-    async function init() {
-      if (!window.Clerk) return;
-
-      const user = window.Clerk.user;
-      if (!user) {
-        document.getElementById('authCard').style.display = 'block';
-        document.getElementById('signInBtn').onclick = () => window.Clerk.openSignIn();
-        return;
-      }
-
-      authToken = await window.Clerk.session.getToken();
-
-      const testRes = await fetch('/api/admin-tasks', {
-        headers: { 'Authorization': 'Bearer ' + authToken }
+    function loadScript(src, pk) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src; s.crossOrigin = 'anonymous';
+        if (pk) s.setAttribute('data-clerk-publishable-key', pk);
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
       });
-
-      if (testRes.status === 403) {
-        document.getElementById('deniedCard').style.display = 'block';
-        return;
-      }
-
-      document.getElementById('mainContent').style.display = 'block';
-      await loadStatus();
-      loadComments();
-      setInterval(loadComments, 3000);
-      setInterval(loadStatus, 30000);
     }
 
-    if (window.Clerk) {
-      init();
-    } else {
-      document.addEventListener('clerk:load', init, { once: true });
+    (async () => {
+      try {
+        const { publishableKey } = await fetch('/api/config').then(r => r.json());
+        if (!publishableKey) { showAuth(); return; }
+
+        const b64 = publishableKey.replace(/^pk_(test|live)_/, '');
+        const frontendApi = 'https://' + atob(b64).replace(/\$$/, '');
+        await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`, publishableKey);
+
+        const clerk = await new Promise((resolve, reject) => {
+          if (window.Clerk) return resolve(window.Clerk);
+          window.addEventListener('clerk:load', () => resolve(window.Clerk), { once: true });
+          setTimeout(() => reject(new Error('timeout')), 8000);
+        });
+
+        if (!clerk.loaded) await clerk.load();
+        window._clerk = clerk;
+
+        if (!clerk.user) { showAuth(); return; }
+
+        authToken = await clerk.session.getToken();
+
+        const testRes = await fetch('/api/admin-tasks', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+
+        if (testRes.status === 403) {
+          document.getElementById('deniedCard').style.display = 'block';
+          return;
+        }
+
+        document.getElementById('mainContent').style.display = 'block';
+        await loadStatus();
+        loadComments();
+        setInterval(loadComments, 3000);
+        setInterval(loadStatus, 30000);
+      } catch (e) {
+        showAuth();
+      }
+    })();
+
+    function showAuth() {
+      document.getElementById('authCard').style.display = 'block';
+      document.getElementById('signInBtn').onclick = () => window._clerk?.openSignIn();
     }
   </script>
 </body>
