@@ -1,0 +1,17 @@
+{
+  "name": "Support Panel",
+  "short_name": "Support",
+  "description": "İstək və sorğularınızı göndərin",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Support Panel</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Support Panel" />
+  <link rel="apple-touch-icon" href="/icons/icon.svg" />
   <script>
     (function() {
       var saved = localStorage.getItem('sp-theme');
@@ -950,6 +956,9 @@
         // Clerk failed to load — form still works without auth
       }
     })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
   </script>
 </body>
 </html>
