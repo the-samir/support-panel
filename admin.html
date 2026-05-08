@@ -203,6 +203,7 @@
       'Cancelled':   { label: 'Ləğv edildi', cls: 'cancelled'   },
     };
     const statusOrder = ['Not started', 'In progress', 'In Review', 'On Hold', 'Done', 'Cancelled'];
+    const statusSortOrder = { 'Not started': 0, 'On Hold': 1, 'In progress': 2, 'In Review': 3, 'Done': 4, 'Cancelled': 5 };
     const priorityColors = { High: 'var(--red)', Medium: 'var(--yellow)', Low: 'var(--green)' };
     const priorityLabels = { High: 'Yüksək', Medium: 'Orta', Low: 'Aşağı' };
 
@@ -302,6 +303,12 @@
       );
       if (dateFrom) filtered = filtered.filter(t => t.createdTime && t.createdTime.slice(0, 10) >= dateFrom);
       if (dateTo) filtered = filtered.filter(t => t.createdTime && t.createdTime.slice(0, 10) <= dateTo);
+
+      filtered = [...filtered].sort((a, b) => {
+        const diff = (statusSortOrder[a.status] ?? 99) - (statusSortOrder[b.status] ?? 99);
+        if (diff !== 0) return diff;
+        return new Date(b.createdTime) - new Date(a.createdTime);
+      });
 
       renderTasks(filtered);
     }
