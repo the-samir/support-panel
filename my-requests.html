@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sorğularım — Support Panel</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Support Panel" />
+  <link rel="apple-touch-icon" href="/icons/icon.svg" />
   <script>
     (function() {
       var saved = localStorage.getItem('sp-theme');
@@ -264,15 +270,8 @@
     <!-- Loading -->
     <div id="loadingState" class="state-msg">Yüklənir...</div>
 
-    <!-- Auth gate -->
-    <div class="card" id="authCard" style="display:none">
-      <div class="auth-card-inner">
-        <div class="auth-icon">🔒</div>
-        <h2>Giriş tələb olunur</h2>
-        <p>Sorğularınızı görmək üçün hesabınıza<br>giriş edin.</p>
-        <button class="auth-btn" onclick="window._clerk && window._clerk.openSignIn()">Giriş et →</button>
-      </div>
-    </div>
+    <!-- Guest note (shown when not signed in, hidden when signed in) -->
+    <div id="authCard" style="display:none"></div>
 
     <!-- Task list -->
     <div id="taskList" style="display:none">
@@ -321,7 +320,11 @@
       const container = document.getElementById('tasksContainer');
 
       if (!tasks.length) {
-        container.innerHTML = '<div class="state-msg"><div class="empty-icon">📭</div>Hələ heç bir sorğu göndərməmisiniz.</div>';
+        const isGuest = !window._clerk?.user;
+        const msg = isGuest
+          ? '<div class="empty-icon">📭</div>Bu cihazdan hələ heç bir sorğu göndərməmisiniz.<br><br><small style="color:var(--muted)">Bütün cihazlardan sorğularınızı görmək üçün <button class="signout-btn" style="font-size:12px;text-decoration:underline" onclick="window._clerk && window._clerk.openSignIn()">hesabınıza daxil olun</button>.</small>'
+          : '<div class="empty-icon">📭</div>Hələ heç bir sorğu göndərməmisiniz.';
+        container.innerHTML = `<div class="state-msg">${msg}</div>`;
         document.getElementById('taskList').style.display = 'block';
         return;
       }
@@ -357,17 +360,33 @@
       document.getElementById('taskList').style.display = 'block';
     }
 
-    async function loadTasks(authToken) {
-      try {
-        const res = await fetch('/api/my-tasks', {
-          headers: { 'Authorization': 'Bearer ' + authToken }
-        });
-        const data = await res.json();
-        if (data.success) renderTasks(data.tasks);
-        else showError(data.error || 'Sorğular yüklənmədi');
-      } catch {
-        showError('Bağlantı xətası');
-      }
+    function getLocalIds() {
+      return JSON.parse(localStorage.getItem('sp-tickets') || '[]');
+    }
+
+    async function fetchByIds(ids) {
+      if (!ids.length) return [];
+      const res = await fetch('/api/local-tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackingIds: ids })
+      });
+      const data = await res.json();
+      return data.success ? data.tasks : [];
+    }
+
+    async function fetchByUser(authToken) {
+      const res = await fetch('/api/my-tasks', {
+        headers: { 'Authorization': 'Bearer ' + authToken }
+      });
+      const data = await res.json();
+      return data.success ? data.tasks : [];
+    }
+
+    function mergeTasks(serverTasks, localTasks) {
+      const seen = new Set(serverTasks.map(t => t.trackingId));
+      const extras = localTasks.filter(t => !seen.has(t.trackingId));
+      return [...serverTasks, ...extras];
     }
 
     function showError(msg) {
@@ -375,32 +394,48 @@
       document.getElementById('loadingState').style.display = 'block';
     }
 
-    function showAuthCard() {
+    async function showTasksForGuest() {
       document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('authCard').style.display = 'block';
-      document.getElementById('taskList').style.display = 'none';
-      document.getElementById('userBar').classList.remove('visible');
+      document.getElementById('authCard').style.display = 'none';
+      const ids = getLocalIds();
+      if (!ids.length) {
+        renderTasks([]);
+        return;
+      }
+      try {
+        const tasks = await fetchByIds(ids);
+        renderTasks(tasks);
+      } catch {
+        showError('Bağlantı xətası');
+      }
     }
 
-    async function onSignedIn(user, clerk) {
+    async function showTasksForUser(user, clerk) {
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('authCard').style.display = 'none';
 
-      const bar = document.getElementById('userBar');
       const nameEl = document.getElementById('userNameEl');
-      const name = user.fullName || user.primaryEmailAddress?.emailAddress || '';
-      nameEl.textContent = name;
-      bar.classList.add('visible');
+      nameEl.textContent = user.fullName || user.primaryEmailAddress?.emailAddress || '';
+      document.getElementById('userBar').classList.add('visible');
 
-      const token = await clerk.session.getToken();
-      await loadTasks(token);
+      try {
+        const token = await clerk.session.getToken();
+        const [serverTasks, localTasks] = await Promise.all([
+          fetchByUser(token),
+          fetchByIds(getLocalIds())
+        ]);
+        renderTasks(mergeTasks(serverTasks, localTasks));
+      } catch {
+        showError('Bağlantı xətası');
+      }
     }
 
-    function loadScript(src) {
+    function loadScript(src, pk) {
       return new Promise((resolve, reject) => {
         const s = document.createElement('script');
         s.src = src;
         s.crossOrigin = 'anonymous';
+        if (pk) s.setAttribute('data-clerk-publishable-key', pk);
         s.onload = resolve;
         s.onerror = reject;
         document.head.appendChild(s);
@@ -408,30 +443,41 @@
     }
 
     (async () => {
+      // Lokal sorğuları dərhal yüklə (auth gözləmədən)
+      const localIds = getLocalIds();
+
       try {
         const { publishableKey } = await fetch('/api/config').then(r => r.json());
-        if (!publishableKey) { showAuthCard(); return; }
+        if (!publishableKey) { await showTasksForGuest(); return; }
 
         const b64 = publishableKey.replace(/^pk_(test|live)_/, '');
         const frontendApi = 'https://' + atob(b64).replace(/\$$/, '');
 
-        await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`);
+        await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`, publishableKey);
 
-        const clerk = new window.Clerk(publishableKey);
-        await clerk.load();
-        window._clerk = clerk;
-
-        clerk.addListener(({ user }) => {
-          if (user) onSignedIn(user, clerk);
-          else showAuthCard();
+        const clerk = await new Promise((resolve, reject) => {
+          if (window.Clerk) return resolve(window.Clerk);
+          window.addEventListener('clerk:load', () => resolve(window.Clerk), { once: true });
+          setTimeout(() => reject(new Error('Clerk load timeout')), 8000);
         });
 
-        if (clerk.user) await onSignedIn(clerk.user, clerk);
-        else showAuthCard();
+        if (!clerk.loaded) await clerk.load();
+        window._clerk = clerk;
+
+        if (clerk.user) await showTasksForUser(clerk.user, clerk);
+        else await showTasksForGuest();
+
+        clerk.addListener(({ user }) => {
+          if (user) showTasksForUser(user, clerk);
+          else showTasksForGuest();
+        });
       } catch {
-        showAuthCard();
+        await showTasksForGuest();
       }
     })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
   </script>
 </body>
 </html>
