@@ -1,7 +1,8 @@
 {
   "rewrites": [
     { "source": "/track", "destination": "/track.html" },
-    { "source": "/my-requests", "destination": "/my-requests.html" }
+    { "source": "/my-requests", "destination": "/my-requests.html" },
+    { "source": "/admin", "destination": "/admin.html" }
   ],
   "headers": [
     {

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Support Panel</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <script>
+    (function() {
+      var saved = localStorage.getItem('sp-theme');
+      var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f; --surface: #171717; --border: #262626;
+      --border-hover: #333; --text: #e8e8e8; --muted: #666;
+      --green: #4ade80; --red: #f87171; --yellow: #fbbf24; --blue: #60a5fa;
+    }
+    [data-theme="light"] {
+      --bg: #f5f5f3; --surface: #ffffff; --border: #e0e0da;
+      --border-hover: #c8c8c0; --text: #1a1a1a; --muted: #999;
+      --green: #16a34a; --red: #dc2626; --yellow: #d97706; --blue: #2563eb;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem 4rem; }
+    .wrap { width: 100%; max-width: 880px; margin: 0 auto; }
+
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .logo-text { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+    .admin-badge { font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 7px; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+    .logo-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .user-name { font-size: 13px; color: var(--muted); }
+    .theme-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; padding: 3px 8px; font-size: 14px; line-height: 1; transition: color .15s, border-color .15s; }
+    .theme-btn:hover { color: var(--text); border-color: var(--border-hover); }
+    [data-theme="dark"] .icon-moon { display: none; }
+    [data-theme="light"] .icon-sun { display: none; }
+    .signout-btn { background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--muted); cursor: pointer; padding: 0; transition: color .15s; }
+    .signout-btn:hover { color: var(--text); }
+
+    /* Auth */
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2.5rem; text-align: center; margin-top: 1rem; }
+    .auth-card h2 { font-weight: 400; font-size: 20px; margin-bottom: .5rem; }
+    .auth-card p { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+    .auth-btn { padding: 10px 28px; background: var(--text); color: var(--bg); border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity .15s; }
+    .auth-btn:hover { opacity: .88; }
+
+    .state-msg { text-align: center; padding: 3rem 0; color: var(--muted); font-size: 14px; }
+
+    /* Filters */
+    .filters { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+    .chip { padding: 5px 13px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .chip:hover { border-color: var(--border-hover); color: var(--text); }
+    .chip.active { border-color: var(--text); color: var(--text); background: rgba(255,255,255,.05); }
+    [data-theme="light"] .chip.active { background: rgba(0,0,0,.04); }
+
+    .filter-select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 5px 10px; outline: none; cursor: pointer; transition: border-color .15s; }
+    .filter-select:focus { border-color: var(--border-hover); }
+
+    .check-btn { padding: 5px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .check-btn:hover { border-color: var(--border-hover); color: var(--text); }
+    .check-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .task-count { font-size: 12px; color: var(--muted); margin-bottom: .75rem; }
+
+    /* Task items */
+    .task-list { display: flex; flex-direction: column; gap: .5rem; }
+
+    .task-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: .875rem 1.125rem; transition: border-color .15s; }
+    .task-item:hover { border-color: var(--border-hover); }
+    .task-item.has-unread { border-left: 3px solid var(--red); padding-left: calc(1.125rem - 2px); }
+
+    .task-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: .5rem; }
+    .task-name { flex: 1; font-size: 14px; line-height: 1.4; min-width: 0; }
+    .task-name a { color: inherit; text-decoration: none; }
+    .task-name a:hover { text-decoration: underline; }
+
+    .task-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .meta-text { font-size: 12px; color: var(--muted); }
+
+    .priority-dot { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+    .priority-dot span { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .tag-chip { font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; }
+    .unread-dot { font-size: 11px; color: var(--red); font-weight: 500; }
+
+    /* Status select */
+    .status-sel {
+      appearance: none; -webkit-appearance: none;
+      border-radius: 7px; font-size: 12px; font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      padding: 4px 26px 4px 10px; cursor: pointer; outline: none;
+      background-repeat: no-repeat; background-position: right 7px center;
+      background-size: 10px; transition: opacity .15s; flex-shrink: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+    }
+    .status-sel:hover { opacity: .8; }
+    .status-sel:disabled { opacity: .45; cursor: not-allowed; }
+    .status-sel.not-started { background-color: rgba(128,128,128,.06); color: var(--muted); border: 1px solid var(--border); }
+    .status-sel.in-progress, .status-sel.in-review { background-color: rgba(96,165,250,.1); color: var(--blue); border: 1px solid rgba(96,165,250,.3); }
+    .status-sel.done { background-color: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.3); }
+    .status-sel.on-hold { background-color: rgba(128,128,128,.04); color: var(--muted); border: 1px solid var(--border); }
+    .status-sel.cancelled { background-color: rgba(248,113,113,.08); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">Support Panel</span>
+      <span class="admin-badge">Admin</span>
+      <div class="logo-right">
+        <button class="theme-btn" onclick="toggleTheme()">
+          <span class="icon-sun">☀</span>
+          <span class="icon-moon">☽</span>
+        </button>
+        <span class="user-name" id="userNameEl" style="display:none"></span>
+        <button class="signout-btn" id="signoutBtn" style="display:none" onclick="window._clerk && window._clerk.signOut()">Çıxış</button>
+      </div>
+    </div>
+
+    <div id="loadingState" class="state-msg">Yüklənir...</div>
+
+    <div class="auth-card" id="authCard" style="display:none">
+      <h2>Admin girişi</h2>
+      <p>Admin panelə daxil olmaq üçün hesabınıza giriş edin.</p>
+      <button class="auth-btn" onclick="window._clerk && window._clerk.openSignIn()">Giriş et →</button>
+    </div>
+
+    <div class="auth-card" id="deniedCard" style="display:none">
+      <h2>İcazəniz yoxdur</h2>
+      <p>Bu panel yalnız adminlərə açıqdır.</p>
+    </div>
+
+    <div id="mainContent" style="display:none">
+      <div class="filters">
+        <div class="filter-chips">
+          <button class="chip active" onclick="setStatus(this, '')">Hamısı</button>
+          <button class="chip" onclick="setStatus(this, 'Not started')">Başlanmayıb</button>
+          <button class="chip" onclick="setStatus(this, 'In progress')">İcrada</button>
+          <button class="chip" onclick="setStatus(this, 'In Review')">Yoxlanılır</button>
+          <button class="chip" onclick="setStatus(this, 'On Hold')">Gözləmədə</button>
+          <button class="chip" onclick="setStatus(this, 'Done')">Tamamlandı</button>
+          <button class="chip" onclick="setStatus(this, 'Cancelled')">Ləğv edildi</button>
+        </div>
+        <select class="filter-select" id="priorityFilter" onchange="applyFilters()">
+          <option value="">Bütün prioritetlər</option>
+          <option value="High">Yüksək</option>
+          <option value="Medium">Orta</option>
+          <option value="Low">Aşağı</option>
+        </select>
+        <button class="check-btn" id="checkBtn" onclick="checkUnread()">💬 Mesajları yoxla</button>
+      </div>
+
+      <div class="task-count" id="taskCount"></div>
+      <div class="task-list" id="taskList"></div>
+    </div>
+  </div>
+
+  <script>
+    const statusMap = {
+      'Not started': { label: 'Başlanmayıb', cls: 'not-started' },
+      'In progress': { label: 'İcrada',      cls: 'in-progress' },
+      'In Review':   { label: 'Yoxlanılır',  cls: 'in-review'   },
+      'Done':        { label: 'Tamamlandı',  cls: 'done'        },
+      'On Hold':     { label: 'Gözləmədə',   cls: 'on-hold'     },
+      'Cancelled':   { label: 'Ləğv edildi', cls: 'cancelled'   },
+    };
+    const statusOrder = ['Not started', 'In progress', 'In Review', 'On Hold', 'Done', 'Cancelled'];
+    const priorityColors = { High: 'var(--red)', Medium: 'var(--yellow)', Low: 'var(--green)' };
+    const priorityLabels = { High: 'Yüksək', Medium: 'Orta', Low: 'Aşağı' };
+
+    let currentStatus = '';
+    let allTasks = [];
+    let authToken = '';
+
+    function toggleTheme() {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('sp-theme', next);
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem('sp-theme')) document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+    });
+
+    function esc(t) {
+      return String(t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('az-AZ', { day:'2-digit', month:'2-digit', year:'numeric' });
+    }
+
+    function statusSelectHtml(current, pageId) {
+      const cls = statusMap[current]?.cls || 'not-started';
+      const opts = statusOrder.map(s =>
+        `<option value="${s}"${s === current ? ' selected' : ''}>${statusMap[s]?.label || s}</option>`
+      ).join('');
+      return `<select class="status-sel ${cls}" data-page="${esc(pageId)}" onchange="updateStatus(this)">${opts}</select>`;
+    }
+
+    function renderTasks(tasks) {
+      document.getElementById('taskCount').textContent = tasks.length + ' sorğu';
+      const list = document.getElementById('taskList');
+
+      if (!tasks.length) {
+        list.innerHTML = '<div class="state-msg">Sorğu tapılmadı</div>';
+        return;
+      }
+
+      list.innerHTML = tasks.map(t => {
+        const trackHref = t.trackingId ? `/track.html?id=${esc(t.trackingId)}` : '#';
+        const priorityHtml = t.priority
+          ? `<span class="priority-dot"><span style="background:${priorityColors[t.priority]}"></span>${esc(priorityLabels[t.priority])}</span>`
+          : '';
+        const tagsHtml = (t.tags || []).map(tag => `<span class="tag-chip">${esc(tag)}</span>`).join('');
+        const requesterHtml = t.requester ? `<span class="meta-text">${esc(t.requester)}</span><span class="meta-text">·</span>` : '';
+        const dateHtml = t.createdTime ? `<span class="meta-text">${formatDate(t.createdTime)}</span>` : '';
+
+        return `
+          <div class="task-item" id="ti-${esc(t.pageId)}">
+            <div class="task-top">
+              <span class="task-name">
+                <a href="${trackHref}" target="_blank">${esc(t.taskName)}</a>
+              </span>
+              ${statusSelectHtml(t.status, t.pageId)}
+            </div>
+            <div class="task-meta">
+              ${requesterHtml}
+              ${priorityHtml}
+              ${dateHtml}
+              ${tagsHtml}
+              <span id="ub-${esc(t.pageId)}"></span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function setStatus(btn, status) {
+      currentStatus = status;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const priority = document.getElementById('priorityFilter').value;
+      let filtered = allTasks;
+      if (currentStatus) filtered = filtered.filter(t => t.status === currentStatus);
+      if (priority) filtered = filtered.filter(t => t.priority === priority);
+      renderTasks(filtered);
+    }
+
+    async function updateStatus(sel) {
+      const pageId = sel.dataset.page;
+      const status = sel.value;
+      const cls = statusMap[status]?.cls || 'not-started';
+      sel.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+          body: JSON.stringify({ pageId, status })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const task = allTasks.find(t => t.pageId === pageId);
+          if (task) task.status = status;
+          sel.className = `status-sel ${cls}`;
+        } else {
+          alert('Xəta: ' + (data.error || 'Bilinməyən xəta'));
+        }
+      } catch {
+        alert('Bağlantı xətası');
+      }
+
+      sel.disabled = false;
+    }
+
+    async function checkUnread() {
+      const btn = document.getElementById('checkBtn');
+      btn.textContent = 'Yoxlanılır...';
+      btn.disabled = true;
+
+      const visibleIds = Array.from(document.querySelectorAll('.task-item'))
+        .map(el => {
+          const id = el.id.replace('ti-', '');
+          return allTasks.find(t => t.pageId === id)?.trackingId;
+        }).filter(Boolean);
+
+      await Promise.all(visibleIds.map(async trackingId => {
+        try {
+          const res = await fetch('/api/comments?id=' + trackingId);
+          const data = await res.json();
+          const task = allTasks.find(t => t.trackingId === trackingId);
+          if (!task || !data.success) return;
+          const el = document.getElementById('ti-' + task.pageId);
+          const badge = document.getElementById('ub-' + task.pageId);
+          if (!el || !badge) return;
+          const comments = data.comments || [];
+          const last = comments[comments.length - 1];
+          if (last?.isUser) {
+            el.classList.add('has-unread');
+            badge.innerHTML = '<span class="unread-dot">● Cavabsız mesaj</span>';
+          } else {
+            el.classList.remove('has-unread');
+            badge.innerHTML = comments.length ? `<span class="meta-text">${comments.length} mesaj</span>` : '';
+          }
+        } catch {}
+      }));
+
+      btn.textContent = '💬 Mesajları yoxla';
+      btn.disabled = false;
+    }
+
+    async function loadTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '<div class="state-msg">Yüklənir...</div>';
+      try {
+        const res = await fetch('/api/admin-tasks', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        const data = await res.json();
+        if (res.status === 401) { showAuthCard(); return; }
+        if (res.status === 403) {
+          document.getElementById('mainContent').style.display = 'none';
+          document.getElementById('deniedCard').style.display = 'block';
+          return;
+        }
+        if (!data.success) {
+          list.innerHTML = `<div class="state-msg">Xəta: ${esc(data.error || 'Yüklənmədi')}</div>`;
+          return;
+        }
+        allTasks = data.tasks;
+        applyFilters();
+      } catch {
+        list.innerHTML = '<div class="state-msg">Bağlantı xətası</div>';
+      }
+    }
+
+    function showAuthCard() {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('authCard').style.display = 'block';
+    }
+
+    async function onSignedIn(user, clerk) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('authCard').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('userNameEl').style.display = '';
+      document.getElementById('signoutBtn').style.display = '';
+      document.getElementById('userNameEl').textContent = user.fullName || user.primaryEmailAddress?.emailAddress || '';
+      authToken = await clerk.session.getToken();
+      await loadTasks();
+    }
+
+    function loadScript(src, pk) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src; s.crossOrigin = 'anonymous';
+        if (pk) s.setAttribute('data-clerk-publishable-key', pk);
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    (async () => {
+      try {
+        const { publishableKey } = await fetch('/api/config').then(r => r.json());
+        if (!publishableKey) { showAuthCard(); return; }
+
+        const b64 = publishableKey.replace(/^pk_(test|live)_/, '');
+        const frontendApi = 'https://' + atob(b64).replace(/\$$/, '');
+        await loadScript(`${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`, publishableKey);
+
+        const clerk = await new Promise((resolve, reject) => {
+          if (window.Clerk) return resolve(window.Clerk);
+          window.addEventListener('clerk:load', () => resolve(window.Clerk), { once: true });
+          setTimeout(() => reject(new Error('timeout')), 8000);
+        });
+
+        if (!clerk.loaded) await clerk.load();
+        window._clerk = clerk;
+
+        if (clerk.user) await onSignedIn(clerk.user, clerk);
+        else showAuthCard();
+
+        clerk.addListener(({ user }) => {
+          if (user) onSignedIn(user, clerk);
+          else showAuthCard();
+        });
+      } catch {
+        showAuthCard();
+      }
+    })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+  </script>
+</body>
+</html>
