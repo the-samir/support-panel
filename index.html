@@ -507,8 +507,55 @@
     .msg.error { display: block; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--red); }
     .msg.loading { display: block; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); }
 
-    .track-link { color: var(--green); text-decoration: none; display: inline-block; margin-top: 5px; font-size: 12px; opacity: 0.85; }
-    .track-link:hover { opacity: 1; }
+    .file-hint-wrap { position: relative; display: inline-block; }
+    .file-hint-btn {
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.15s;
+    }
+    .file-hint-btn:hover { color: var(--text); }
+    .file-hint-btn svg { flex-shrink: 0; }
+
+    .file-tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      width: 260px;
+      z-index: 50;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .file-tooltip.open { display: block; }
+    .file-tooltip p { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .file-tooltip-links { display: flex; gap: 8px; }
+    .file-tooltip-link {
+      flex: 1;
+      display: block;
+      text-align: center;
+      padding: 7px 0;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .file-tooltip-link:hover { border-color: var(--border-hover); background: var(--bg); }
+
+
 
     .guest-note {
       display: flex;
@@ -584,6 +631,23 @@
       <div class="field">
         <label>Ətraflı açıqlama</label>
         <textarea id="description" placeholder="Nə baş verdi? Hansı addımları atdınız? Nə gözləyirdiniz?"></textarea>
+        <div style="margin-top:8px;">
+          <div class="file-hint-wrap" id="fileHintWrap">
+            <button type="button" class="file-hint-btn" onclick="toggleFileHint()">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M13.5 8.5L7.5 14.5a4 4 0 01-5.657-5.657L8.5 2.186a2.5 2.5 0 013.536 3.535L5.379 12.38a1 1 0 01-1.415-1.414L10.5 4.5"/>
+              </svg>
+              Fayl əlavə et
+            </button>
+            <div class="file-tooltip" id="fileTooltip">
+              <p>Fayl göndərmək istəyirsinizsə, aşağıdakı xidmətlərdən birini istifadə edib linki açıqlamaya yapışdırın.</p>
+              <div class="file-tooltip-links">
+                <a href="https://drive.google.com" target="_blank" rel="noopener" class="file-tooltip-link">Google Drive</a>
+                <a href="https://wetransfer.com" target="_blank" rel="noopener" class="file-tooltip-link">WeTransfer</a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="divider"></div>
@@ -800,6 +864,16 @@
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
       if (!localStorage.getItem('sp-theme')) {
         document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      }
+    });
+
+    function toggleFileHint() {
+      document.getElementById('fileTooltip').classList.toggle('open');
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#fileHintWrap')) {
+        document.getElementById('fileTooltip')?.classList.remove('open');
       }
     });
 
