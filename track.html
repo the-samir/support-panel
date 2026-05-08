@@ -108,7 +108,7 @@
 
     .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 14px; }
 
-    .messages { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; min-height: 40px; }
+    .messages { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; min-height: 60px; max-height: 360px; overflow-y: auto; scroll-behavior: smooth; }
     .msg-row { display: flex; flex-direction: column; gap: 3px; }
     .msg-row.mine { align-items: flex-end; }
     .msg-row.theirs { align-items: flex-start; }
@@ -198,6 +198,7 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const trackingId = params.get('id');
+    let lastCommentCount = -1;
 
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
@@ -259,6 +260,7 @@
         document.getElementById('trackingIdLabel').textContent = 'ID: ' + trackingId;
 
         loadComments();
+        setInterval(loadComments, 3000);
       } catch (err) {
         card.innerHTML = '<div class="error-state">Bağlantı xətası</div>';
       }
@@ -270,22 +272,30 @@
         const data = await res.json();
         if (!data.success) return;
 
+        const count = data.comments?.length || 0;
+        if (count === lastCommentCount) return;
+
         const container = document.getElementById('messages');
-        if (!data.comments || data.comments.length === 0) {
+        const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
+
+        if (count === 0) {
           container.innerHTML = '<div class="no-messages">Hələ mesaj yoxdur</div>';
-          return;
+        } else {
+          container.innerHTML = data.comments.map(c =>
+            '<div class="msg-row ' + (c.isUser ? 'mine' : 'theirs') + '">' +
+            (!c.isUser ? '<span class="msg-meta msg-who">Support</span>' : '') +
+            '<div class="bubble ' + (c.isUser ? 'mine' : 'theirs') + '">' + escHtml(c.text) + '</div>' +
+            '<span class="msg-meta">' + formatTime(c.time) + '</span>' +
+            '</div>'
+          ).join('');
+
+          if (wasAtBottom || lastCommentCount === -1) {
+            container.scrollTop = container.scrollHeight;
+          }
         }
 
-        container.innerHTML = data.comments.map(c =>
-          '<div class="msg-row ' + (c.isUser ? 'mine' : 'theirs') + '">' +
-          (!c.isUser ? '<span class="msg-meta msg-who">Samir</span>' : '') +
-          '<div class="bubble ' + (c.isUser ? 'mine' : 'theirs') + '">' + escHtml(c.text) + '</div>' +
-          '<span class="msg-meta">' + formatTime(c.time) + '</span>' +
-          '</div>'
-        ).join('');
-
-        container.scrollTop = container.scrollHeight;
-      } catch (err) {}
+        lastCommentCount = count;
+      } catch {}
     }
 
     async function sendMessage() {
