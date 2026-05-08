@@ -39,6 +39,9 @@ export default async function handler(req, res) {
     "Source": {
       select: { name: "Support Panel" }
     },
+    "Project": {
+      relation: [{ id: "35a0b457-c8b4-80cb-a23a-f0818b68b089" }]
+    },
     "Tracking ID": {
       rich_text: [{ text: { content: trackingId } }]
     },
