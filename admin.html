@@ -68,11 +68,7 @@
     .filter-select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 5px 10px; outline: none; cursor: pointer; transition: border-color .15s; }
     .filter-select:focus { border-color: var(--border-hover); }
 
-    .check-btn { padding: 5px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all .15s; white-space: nowrap; }
-    .check-btn:hover { border-color: var(--border-hover); color: var(--text); }
-    .check-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-    /* Search & date filters */
+/* Search & date filters */
     .filters-row2 { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
     .search-input {
       flex: 1; min-width: 160px;
@@ -181,7 +177,6 @@
           <option value="Medium">Orta</option>
           <option value="Low">Aşağı</option>
         </select>
-        <button class="check-btn" id="checkBtn" onclick="checkUnread()">💬 Mesajları yoxla</button>
       </div>
 
       <div class="filters-row2">
@@ -339,10 +334,6 @@
     }
 
     async function checkUnread() {
-      const btn = document.getElementById('checkBtn');
-      btn.textContent = 'Yoxlanılır...';
-      btn.disabled = true;
-
       const visibleIds = Array.from(document.querySelectorAll('.task-item'))
         .map(el => {
           const id = el.id.replace('ti-', '');
@@ -370,8 +361,6 @@
         } catch {}
       }));
 
-      btn.textContent = '💬 Mesajları yoxla';
-      btn.disabled = false;
     }
 
     async function loadTasks() {
@@ -394,6 +383,7 @@
         }
         allTasks = data.tasks;
         applyFilters();
+        checkUnread();
       } catch {
         list.innerHTML = '<div class="state-msg">Bağlantı xətası</div>';
       }
