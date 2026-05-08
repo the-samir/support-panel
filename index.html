@@ -871,6 +871,10 @@
         const data = await res.json();
 
         if (data.success) {
+          const stored = JSON.parse(localStorage.getItem('sp-tickets') || '[]');
+          if (!stored.includes(data.trackingId)) stored.unshift(data.trackingId);
+          localStorage.setItem('sp-tickets', JSON.stringify(stored.slice(0, 100)));
+
           const trackUrl = '/track.html?id=' + data.trackingId;
           showMsg('İstəyiniz qeydə alındı! <a class="track-link" href="' + trackUrl + '" target="_blank">Sorğunun statusunu izlə →</a>', 'success');
           document.getElementById('taskName').value = '';
