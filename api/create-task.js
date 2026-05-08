@@ -36,6 +36,9 @@ export default async function handler(req, res) {
     "Status": {
       status: { name: "Not started" }
     },
+    "Source": {
+      select: { name: "Support Panel" }
+    },
     "Tracking ID": {
       rich_text: [{ text: { content: trackingId } }]
     },
