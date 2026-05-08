@@ -49,10 +49,12 @@ export default async function handler(req, res) {
     const comments = (commentsData.results || []).map(c => {
       const text = c.rich_text?.map(r => r.text?.content || '').join('') || '';
       const isUser = text.startsWith('[İstifadəçi]: ');
+      const isAdmin = text.startsWith('[Samir]: ');
       return {
         id: c.id,
-        text: isUser ? text.replace('[İstifadəçi]: ', '') : text,
+        text: isUser ? text.replace('[İstifadəçi]: ', '') : isAdmin ? text.replace('[Samir]: ', '') : text,
         isUser,
+        isAdmin,
         time: c.created_time
       };
     });
