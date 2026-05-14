@@ -293,7 +293,15 @@
   </div>
 
   <script>
-    let lang = localStorage.getItem('sp-lang') || 'az';
+    function detectLang() {
+      const saved = localStorage.getItem('sp-lang');
+      if (saved) return saved;
+      const bl = (navigator.language || 'az').toLowerCase();
+      if (bl.startsWith('ru')) return 'ru';
+      if (bl.startsWith('en')) return 'en';
+      return 'az';
+    }
+    let lang = detectLang();
     let cachedTasks = null;
 
     const T = {

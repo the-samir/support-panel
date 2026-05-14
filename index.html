@@ -761,7 +761,15 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
-    let lang = localStorage.getItem('sp-lang') || 'az';
+    function detectLang() {
+      const saved = localStorage.getItem('sp-lang');
+      if (saved) return saved;
+      const bl = (navigator.language || 'az').toLowerCase();
+      if (bl.startsWith('ru')) return 'ru';
+      if (bl.startsWith('en')) return 'en';
+      return 'az';
+    }
+    let lang = detectLang();
 
     const T = {
       az: {
