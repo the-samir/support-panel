@@ -81,12 +81,17 @@
     }
     .search-input:focus { border-color: var(--border-hover); }
     .search-input::placeholder { color: var(--muted); }
-    .flatpickr-input {
-      background: var(--bg) !important; border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text) !important; font-family: 'DM Sans', sans-serif; font-size: 12px;
-      padding: 5px 11px; outline: none; cursor: pointer; transition: border-color .15s;
-      width: 110px;
-    }
+    .flatpickr-input,
+.form-control.input[readonly] {
+  background: var(--bg) !important; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text) !important; font-family: 'DM Sans', sans-serif; font-size: 12px;
+  padding: 5px 11px; outline: none; cursor: pointer; transition: border-color .15s;
+  width: 110px;
+}
+.flatpickr-input:focus,
+.form-control.input[readonly]:focus { border-color: var(--border-hover); }
+.flatpickr-input::placeholder,
+.form-control.input[readonly]::placeholder { color: var(--muted) !important; }
     .flatpickr-input:focus { border-color: var(--border-hover); }
     .flatpickr-input::placeholder { color: var(--muted) !important; }
 
@@ -627,6 +632,7 @@
     const fpConfig = (handlers) => ({
       dateFormat: 'Y-m-d',
       altInput: true,
+      altInputClass: 'flatpickr-input',
       altFormat: 'd/m/Y',
       disableMobile: true,
       onReady: handlers.build,
