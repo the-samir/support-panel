@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate" />
   <title>Support Panel</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#0f0f0f" />
@@ -10,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="Support Panel" />
   <link rel="apple-touch-icon" href="/icons/icon.svg" />
-    <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <script>
     (function() {
@@ -113,6 +114,15 @@
     .theme-btn:hover { color: var(--text); border-color: var(--border-hover); }
     [data-theme="dark"] .icon-moon { display: none; }
     [data-theme="light"] .icon-sun { display: none; }
+
+    .lang-sel {
+      appearance: none; -webkit-appearance: none;
+      background: transparent; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); cursor: pointer; padding: 3px 6px;
+      font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: .04em;
+      outline: none; transition: color .15s, border-color .15s;
+    }
+    .lang-sel:hover { color: var(--text); border-color: var(--border-hover); }
 
     /* User bar */
     .user-bar {
@@ -575,8 +585,6 @@
     }
     .file-tooltip-link:hover { border-color: var(--border-hover); background: var(--bg); }
 
-
-
     .guest-note {
       display: flex;
       align-items: center;
@@ -614,10 +622,15 @@
         <div class="logo-dot"></div>
         <span class="logo-text">Support Panel</span>
         <div class="logo-right">
-          <button class="theme-btn" onclick="toggleTheme()" aria-label="Tema dəyiş">
+          <button class="theme-btn" onclick="toggleTheme()" aria-label="Theme">
             <span class="icon-sun">☀</span>
             <span class="icon-moon">☽</span>
           </button>
+          <select class="lang-sel" id="langSel" onchange="setLang(this.value)">
+            <option value="az">AZ</option>
+            <option value="en">EN</option>
+            <option value="ru">RU</option>
+          </select>
         </div>
       </div>
 
@@ -629,48 +642,48 @@
         </div>
       </div>
 
-      <h1>Yeni istək göndər</h1>
-      <p class="subtitle">Probleminizi və ya təklifinizi göndərin, mümkün ən qısa zamanda baxılacaq.</p>
+      <h1 id="pageH1">Yeni istək göndər</h1>
+      <p class="subtitle" id="pageSubtitle">Probleminizi və ya təklifinizi göndərin, mümkün ən qısa zamanda baxılacaq.</p>
     </div>
 
     <div class="guest-note" id="guestNote">
       <span class="guest-note-icon">💡</span>
-      <span class="guest-note-text">Bütün cihazlardan sorğularınızı izləmək üçün hesabınıza daxil olun.</span>
+      <span class="guest-note-text" id="guestNoteText">Bütün cihazlardan sorğularınızı izləmək üçün hesabınıza daxil olun.</span>
       <div style="display:flex;gap:8px;flex-shrink:0">
-        <a href="/my-requests" class="guest-note-btn" style="text-decoration:none">Sorğularım</a>
-        <button class="guest-note-btn" onclick="window._clerk ? window._clerk.openSignIn() : null">Daxil ol</button>
+        <a href="/my-requests" class="guest-note-btn" id="guestMyReqsBtn" style="text-decoration:none">Sorğularım</a>
+        <button class="guest-note-btn" id="guestSignInBtn" onclick="window._clerk ? window._clerk.openSignIn() : null">Daxil ol</button>
       </div>
     </div>
 
     <div class="card" id="mainCard">
       <div class="field" id="nameField">
-        <label>Ad <span class="required-star">*</span></label>
+        <label><span id="lbName">Ad</span> <span class="required-star">*</span></label>
         <input type="text" id="requesterName" placeholder="Adınızı daxil edin..." autocomplete="name" />
       </div>
 
-      <!-- honeypot: botlar üçün, real istifadəçilər görmür -->
+      <!-- honeypot -->
       <div style="position:absolute;left:-9999px;opacity:0;pointer-events:none" aria-hidden="true">
         <input type="text" id="hpField" name="website" tabindex="-1" autocomplete="off" />
       </div>
 
       <div class="field">
-        <label>Başlıq <span class="required-star">*</span></label>
+        <label><span id="lbTitle">Başlıq</span> <span class="required-star">*</span></label>
         <input type="text" id="taskName" placeholder="Problemi qısaca ifadə edin..." />
       </div>
 
       <div class="field">
-        <label>Ətraflı açıqlama</label>
+        <label id="lbDesc">Ətraflı açıqlama</label>
         <textarea id="description" placeholder="Nə baş verdi? Hansı addımları atdınız? Nə gözləyirdiniz?"></textarea>
         <div style="margin-top:8px;">
           <div class="file-hint-wrap" id="fileHintWrap">
-            <button type="button" class="file-hint-btn" onclick="toggleFileHint()">
+            <button type="button" class="file-hint-btn" id="fileHintBtn" onclick="toggleFileHint()">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M13.5 8.5L7.5 14.5a4 4 0 01-5.657-5.657L8.5 2.186a2.5 2.5 0 013.536 3.535L5.379 12.38a1 1 0 01-1.415-1.414L10.5 4.5"/>
               </svg>
-              Fayl əlavə et
+              <span id="fileHintText">Fayl əlavə et</span>
             </button>
             <div class="file-tooltip" id="fileTooltip">
-              <p>Fayl göndərmək istəyirsinizsə, aşağıdakı xidmətlərdən (və ya istənilən başqa bir fayl paylaşma xidmətindən) birini istifadə edib linki açıqlamaya yapışdırın.</p>
+              <p id="fileTooltipText">Fayl göndərmək istəyirsinizsə, aşağıdakı xidmətlərdən (və ya istənilən başqa bir fayl paylaşma xidmətindən) birini istifadə edib linki açıqlamaya yapışdırın.</p>
               <div class="file-tooltip-links">
                 <a href="https://drive.google.com" target="_blank" rel="noopener" class="file-tooltip-link">Google Drive</a>
                 <a href="https://wetransfer.com" target="_blank" rel="noopener" class="file-tooltip-link">WeTransfer</a>
@@ -683,25 +696,25 @@
       <div class="divider"></div>
 
       <div class="field">
-        <label>Prioritet</label>
+        <label id="lbPriority">Prioritet</label>
         <div class="priority-group">
-          <button class="priority-btn" data-p="High" onclick="setPriority('High')"><span class="p-bars"><b class="on" style="height:5px"></b><b class="on" style="height:9px"></b><b class="on" style="height:13px"></b></span>Yüksək</button>
-          <button class="priority-btn" data-p="Medium" onclick="setPriority('Medium')"><span class="p-bars"><b class="on" style="height:5px"></b><b class="on" style="height:9px"></b><b style="height:13px"></b></span>Orta</button>
-          <button class="priority-btn" data-p="Low" onclick="setPriority('Low')"><span class="p-bars"><b class="on" style="height:5px"></b><b style="height:9px"></b><b style="height:13px"></b></span>Aşağı</button>
+          <button class="priority-btn" data-p="High" onclick="setPriority('High')"><span class="p-bars"><b class="on" style="height:5px"></b><b class="on" style="height:9px"></b><b class="on" style="height:13px"></b></span><span class="p-label">Yüksək</span></button>
+          <button class="priority-btn" data-p="Medium" onclick="setPriority('Medium')"><span class="p-bars"><b class="on" style="height:5px"></b><b class="on" style="height:9px"></b><b style="height:13px"></b></span><span class="p-label">Orta</span></button>
+          <button class="priority-btn" data-p="Low" onclick="setPriority('Low')"><span class="p-bars"><b class="on" style="height:5px"></b><b style="height:9px"></b><b style="height:13px"></b></span><span class="p-label">Aşağı</span></button>
         </div>
       </div>
 
       <div class="field">
-        <label>Son tarix <span class="required-star">*</span></label>
+        <label><span id="lbDueDate">Son tarix</span> <span class="required-star">*</span></label>
         <div class="datetime-row" id="dueDateWrap">
           <div class="dt-group">
-            <span class="dt-label">Gün</span>
+            <span class="dt-label" id="dtLabelDay">Gün</span>
             <input type="text" id="dueDate" placeholder="--/--/----" readonly />
           </div>
           <div class="dt-group">
             <div class="dt-header">
-              <span class="dt-label">Saat</span>
-              <button class="clear-time-btn" onclick="clearTime()">Təmizlə</button>
+              <span class="dt-label" id="dtLabelTime">Saat</span>
+              <button class="clear-time-btn" id="clearTimeBtn" onclick="clearTime()">Təmizlə</button>
             </div>
             <div class="time-row">
               <div class="custom-select" id="hourSelect">
@@ -726,7 +739,7 @@
       </div>
 
       <div class="field">
-        <label>Tag-lar <span class="required-star">*</span></label>
+        <label><span id="lbTags">Tag-lar</span> <span class="required-star">*</span></label>
         <div class="tags-grid" id="tagsGrid">
           <button type="button" class="tag-btn" data-tag="Jira" onclick="selectTag(this)">Jira</button>
           <button type="button" class="tag-btn" data-tag="Confluence" onclick="selectTag(this)">Confluence</button>
@@ -735,7 +748,7 @@
           <button type="button" class="tag-btn" data-tag="WireGuard" onclick="selectTag(this)">WireGuard</button>
           <button type="button" class="tag-btn" data-tag="Outlook" onclick="selectTag(this)">Outlook</button>
           <button type="button" class="tag-btn" data-tag="Discord" onclick="selectTag(this)">Discord</button>
-          <button type="button" class="tag-btn" data-tag="Digər" onclick="selectTag(this)">Digər</button>
+          <button type="button" class="tag-btn" data-tag="Digər" id="tagOtherBtn" onclick="selectTag(this)">Digər</button>
         </div>
         <div class="field-error" id="tagError">Zəhmət olmasa bir tag seçin</div>
       </div>
@@ -748,6 +761,121 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
+    let lang = localStorage.getItem('sp-lang') || 'az';
+
+    const T = {
+      az: {
+        pageH1: 'Yeni istək göndər',
+        subtitle: 'Probleminizi və ya təklifinizi göndərin, mümkün ən qısa zamanda baxılacaq.',
+        lbName: 'Ad', lbTitle: 'Başlıq', lbDesc: 'Ətraflı açıqlama',
+        lbPriority: 'Prioritet', lbDueDate: 'Son tarix', lbTags: 'Tag-lar',
+        phName: 'Adınızı daxil edin...', phTitle: 'Problemi qısaca ifadə edin...',
+        phDesc: 'Nə baş verdi? Hansı addımları atdınız? Nə gözləyirdiniz?',
+        fileAttach: 'Fayl əlavə et',
+        fileTooltipText: 'Fayl göndərmək istəyirsinizsə, aşağıdakı xidmətlərdən (və ya istənilən başqa bir fayl paylaşma xidmətindən) birini istifadə edib linki açıqlamaya yapışdırın.',
+        dtDay: 'Gün', dtTime: 'Saat', clearTime: 'Təmizlə',
+        pHigh: 'Yüksək', pMedium: 'Orta', pLow: 'Aşağı',
+        tagOther: 'Digər',
+        submit: 'Göndər →',
+        guestNoteText: 'Bütün cihazlardan sorğularınızı izləmək üçün hesabınıza daxil olun.',
+        guestMyReqs: 'Sorğularım', guestSignIn: 'Daxil ol',
+        myReqs: 'Sorğularım →', signOut: 'Çıxış',
+        errNoTitle: 'Başlıq daxil edin', errNoName: 'Adınızı daxil edin',
+        errNoDate: 'Zəhmət olmasa tarixi seçin', errNoTag: 'Zəhmət olmasa bir tag seçin',
+        errPrefix: 'Xəta: ', errConn: 'Bağlantı xətası: ',
+        sending: 'Göndərilir...', success: 'İstəyiniz qeydə alındı!',
+        trackLink: 'Statusu izlə →', copyId: 'ID kopyala', copied: 'Kopyalandı ✓',
+        months: ['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'],
+      },
+      en: {
+        pageH1: 'Submit a request',
+        subtitle: 'Send your issue or suggestion and we\'ll look into it as soon as possible.',
+        lbName: 'Name', lbTitle: 'Title', lbDesc: 'Description',
+        lbPriority: 'Priority', lbDueDate: 'Due date', lbTags: 'Tags',
+        phName: 'Enter your name...', phTitle: 'Briefly describe the issue...',
+        phDesc: 'What happened? What steps did you take? What did you expect?',
+        fileAttach: 'Attach a file',
+        fileTooltipText: 'To send a file, use one of the services below (or any other file sharing service) and paste the link in the description.',
+        dtDay: 'Day', dtTime: 'Time', clearTime: 'Clear',
+        pHigh: 'High', pMedium: 'Medium', pLow: 'Low',
+        tagOther: 'Other',
+        submit: 'Submit →',
+        guestNoteText: 'Sign in to track your requests across all devices.',
+        guestMyReqs: 'My requests', guestSignIn: 'Sign in',
+        myReqs: 'My requests →', signOut: 'Sign out',
+        errNoTitle: 'Please enter a title', errNoName: 'Please enter your name',
+        errNoDate: 'Please select a date', errNoTag: 'Please select a tag',
+        errPrefix: 'Error: ', errConn: 'Connection error: ',
+        sending: 'Submitting...', success: 'Your request has been submitted!',
+        trackLink: 'Track status →', copyId: 'Copy ID', copied: 'Copied ✓',
+        months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+      },
+      ru: {
+        pageH1: 'Новый запрос',
+        subtitle: 'Отправьте вашу проблему или предложение, и мы рассмотрим его в кратчайшие сроки.',
+        lbName: 'Имя', lbTitle: 'Тема', lbDesc: 'Подробное описание',
+        lbPriority: 'Приоритет', lbDueDate: 'Срок', lbTags: 'Теги',
+        phName: 'Введите ваше имя...', phTitle: 'Кратко опишите проблему...',
+        phDesc: 'Что произошло? Какие шаги вы предприняли? Что ожидали?',
+        fileAttach: 'Прикрепить файл',
+        fileTooltipText: 'Чтобы отправить файл, воспользуйтесь одним из сервисов ниже (или любым другим) и вставьте ссылку в описание.',
+        dtDay: 'День', dtTime: 'Время', clearTime: 'Очистить',
+        pHigh: 'Высокий', pMedium: 'Средний', pLow: 'Низкий',
+        tagOther: 'Другое',
+        submit: 'Отправить →',
+        guestNoteText: 'Войдите, чтобы отслеживать запросы со всех устройств.',
+        guestMyReqs: 'Мои запросы', guestSignIn: 'Войти',
+        myReqs: 'Мои запросы →', signOut: 'Выйти',
+        errNoTitle: 'Введите тему', errNoName: 'Введите ваше имя',
+        errNoDate: 'Пожалуйста, выберите дату', errNoTag: 'Пожалуйста, выберите тег',
+        errPrefix: 'Ошибка: ', errConn: 'Ошибка соединения: ',
+        sending: 'Отправка...', success: 'Ваш запрос принят!',
+        trackLink: 'Отследить →', copyId: 'Скопировать ID', copied: 'Скопировано ✓',
+        months: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
+      },
+    };
+
+    function tr(key) { return (T[lang] || T.az)[key] ?? T.az[key]; }
+
+    function setLang(l) {
+      lang = l;
+      localStorage.setItem('sp-lang', l);
+      applyLang();
+      if (_monthBtn) _monthBtn.textContent = tr('months')[fp?.currentMonth ?? 0];
+    }
+
+    function applyLang() {
+      document.getElementById('langSel').value = lang;
+      document.getElementById('pageH1').textContent = tr('pageH1');
+      document.getElementById('pageSubtitle').textContent = tr('subtitle');
+      document.getElementById('lbName').textContent = tr('lbName');
+      document.getElementById('lbTitle').textContent = tr('lbTitle');
+      document.getElementById('lbDesc').textContent = tr('lbDesc');
+      document.getElementById('lbPriority').textContent = tr('lbPriority');
+      document.getElementById('lbDueDate').textContent = tr('lbDueDate');
+      document.getElementById('lbTags').textContent = tr('lbTags');
+      document.getElementById('requesterName').placeholder = tr('phName');
+      document.getElementById('taskName').placeholder = tr('phTitle');
+      document.getElementById('description').placeholder = tr('phDesc');
+      document.getElementById('fileHintText').textContent = tr('fileAttach');
+      document.getElementById('fileTooltipText').textContent = tr('fileTooltipText');
+      document.getElementById('dtLabelDay').textContent = tr('dtDay');
+      document.getElementById('dtLabelTime').textContent = tr('dtTime');
+      document.getElementById('clearTimeBtn').textContent = tr('clearTime');
+      document.querySelector('.priority-btn[data-p="High"] .p-label').textContent = tr('pHigh');
+      document.querySelector('.priority-btn[data-p="Medium"] .p-label').textContent = tr('pMedium');
+      document.querySelector('.priority-btn[data-p="Low"] .p-label').textContent = tr('pLow');
+      document.getElementById('tagOtherBtn').textContent = tr('tagOther');
+      document.getElementById('submitBtn').textContent = tr('submit');
+      document.getElementById('guestNoteText').textContent = tr('guestNoteText');
+      document.getElementById('guestMyReqsBtn').textContent = tr('guestMyReqs');
+      document.getElementById('guestSignInBtn').textContent = tr('guestSignIn');
+      document.getElementById('myReqLink').textContent = tr('myReqs');
+      document.getElementById('signoutBtn').textContent = tr('signOut');
+      document.getElementById('dateError').textContent = tr('errNoDate');
+      document.getElementById('tagError').textContent = tr('errNoTag');
+    }
+
     let selectedPriority = '';
     let selectedTag = '';
     let selectedHour = '';
@@ -814,7 +942,6 @@
       if (!e.target.closest('.custom-select')) closeAllDropdowns();
     });
 
-    const AZ_MONTHS = ['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
     let _monthBtn = null;
     let _monthList = null;
 
@@ -825,12 +952,12 @@
       _monthBtn = document.createElement('button');
       _monthBtn.type = 'button';
       _monthBtn.className = 'fp-month-btn';
-      _monthBtn.textContent = AZ_MONTHS[instance.currentMonth];
+      _monthBtn.textContent = tr('months')[instance.currentMonth];
 
       _monthList = document.createElement('div');
       _monthList.className = 'fp-month-list';
 
-      AZ_MONTHS.forEach((name, idx) => {
+      tr('months').forEach((name, idx) => {
         const item = document.createElement('button');
         item.type = 'button';
         item.className = 'fp-month-item' + (idx === instance.currentMonth ? ' active' : '');
@@ -866,8 +993,10 @@
     }
 
     function updateMonthSelect(sel, dateStr, instance) {
-      if (_monthBtn) _monthBtn.textContent = AZ_MONTHS[instance.currentMonth];
+      const months = tr('months');
+      if (_monthBtn) _monthBtn.textContent = months[instance.currentMonth];
       if (_monthList) _monthList.querySelectorAll('.fp-month-item').forEach((item, idx) => {
+        item.textContent = months[idx];
         item.classList.toggle('active', idx === instance.currentMonth);
       });
     }
@@ -930,18 +1059,16 @@
     }
 
     async function createTask() {
-      // Honeypot yoxlaması
       if (document.getElementById('hpField').value) return;
 
       const taskName = document.getElementById('taskName').value.trim();
-      if (!taskName) { showMsg('Başlıq daxil edin', 'error'); return; }
+      if (!taskName) { showMsg(tr('errNoTitle'), 'error'); return; }
 
-      // Ad yoxlaması (yalnız guest üçün)
       const nameField = document.getElementById('nameField');
       let requesterName = '';
       if (nameField.style.display !== 'none') {
         requesterName = document.getElementById('requesterName').value.trim();
-        if (!requesterName) { showMsg('Adınızı daxil edin', 'error'); document.getElementById('requesterName').focus(); return; }
+        if (!requesterName) { showMsg(tr('errNoName'), 'error'); document.getElementById('requesterName').focus(); return; }
       } else {
         requesterName = window._clerk?.user?.fullName || window._clerk?.user?.primaryEmailAddress?.emailAddress || '';
       }
@@ -969,7 +1096,7 @@
 
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
-      showMsg('Göndərilir...', 'loading');
+      showMsg(tr('sending'), 'loading');
 
       let authToken = '';
       try {
@@ -998,17 +1125,15 @@
           const trackUrl = '/track.html?id=' + data.trackingId;
           const tid = data.trackingId;
           showMsg(
-            'İstəyiniz qeydə alındı! <a class="track-link" href="' + trackUrl + '" target="_blank">Statusu izlə →</a>' +
-            '<br><button class="copy-btn" onclick="copyId(\'' + tid + '\', this)">ID kopyala</button>',
+            tr('success') + ' <a class="track-link" href="' + trackUrl + '" target="_blank">' + tr('trackLink') + '</a>' +
+            '<br><button class="copy-btn" onclick="copyId(\'' + tid + '\', this)">' + tr('copyId') + '</button>',
             'success'
           );
 
-          // Confetti
           if (typeof confetti === 'function') {
             confetti({ particleCount: 80, spread: 70, origin: { y: 0.7 }, colors: ['#4ade80','#e8e8e8','#60a5fa'] });
           }
 
-          // Tab indicator sıfırla
           setTabDirty(false);
 
           document.getElementById('taskName').value = '';
@@ -1028,10 +1153,10 @@
             el.querySelectorAll('.cs-item').forEach(i => i.classList.remove('active'));
           });
         } else {
-          showMsg('Xəta: ' + (data.error || 'Bilinməyən xəta'), 'error');
+          showMsg(tr('errPrefix') + (data.error || 'Unknown error'), 'error');
         }
       } catch (err) {
-        showMsg('Bağlantı xətası: ' + err.message, 'error');
+        showMsg(tr('errConn') + err.message, 'error');
       }
 
       btn.disabled = false;
@@ -1039,8 +1164,8 @@
 
     function copyId(tid, btn) {
       navigator.clipboard.writeText(tid).then(() => {
-        btn.textContent = 'Kopyalandı ✓';
-        setTimeout(() => { btn.textContent = 'ID kopyala'; }, 2000);
+        btn.textContent = tr('copied');
+        setTimeout(() => { btn.textContent = tr('copyId'); }, 2000);
       });
     }
 
@@ -1090,10 +1215,12 @@
       });
     }
 
+    applyLang();
+
     (async () => {
       try {
         const { publishableKey } = await fetch('/api/config').then(r => r.json());
-        if (!publishableKey) { showAuthCard(); return; }
+        if (!publishableKey) { return; }
 
         const b64 = publishableKey.replace(/^pk_(test|live)_/, '');
         const frontendApi = 'https://' + atob(b64).replace(/\$$/, '');

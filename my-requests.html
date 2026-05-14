@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate" />
   <title>Sorğularım — Support Panel</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#0f0f0f" />
@@ -10,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="Support Panel" />
   <link rel="apple-touch-icon" href="/icons/icon.svg" />
-    <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <script>
     (function() {
@@ -84,6 +85,15 @@
     [data-theme="dark"] .icon-moon { display: none; }
     [data-theme="light"] .icon-sun { display: none; }
 
+    .lang-sel {
+      appearance: none; -webkit-appearance: none;
+      background: transparent; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); cursor: pointer; padding: 3px 6px;
+      font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: .04em;
+      outline: none; transition: color .15s, border-color .15s;
+    }
+    .lang-sel:hover { color: var(--text); border-color: var(--border-hover); }
+
     .page-header { margin-bottom: 1.75rem; }
     .page-header h1 { font-size: 24px; font-weight: 300; margin-bottom: 0.35rem; }
     .page-header p { font-size: 13px; color: var(--muted); }
@@ -120,7 +130,6 @@
     }
     .signout-btn:hover { color: var(--text); }
 
-    /* Auth card */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -150,11 +159,9 @@
     }
     .auth-btn:hover { opacity: 0.88; }
 
-    /* Loading / empty */
     .state-msg { text-align: center; padding: 2.5rem 0; color: var(--muted); font-size: 14px; }
     .empty-icon { font-size: 28px; margin-bottom: 0.75rem; opacity: 0.4; }
 
-    /* Task list */
     .task-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
     .task-card {
@@ -249,52 +256,122 @@
       <div class="logo-dot"></div>
       <span class="logo-text">Support Panel</span>
       <div class="logo-right">
-        <button class="theme-btn" onclick="toggleTheme()" aria-label="Tema dəyiş">
+        <button class="theme-btn" onclick="toggleTheme()" aria-label="Theme">
           <span class="icon-sun">☀</span>
           <span class="icon-moon">☽</span>
         </button>
+        <select class="lang-sel" id="langSel" onchange="setLang(this.value)">
+          <option value="az">AZ</option>
+          <option value="en">EN</option>
+          <option value="ru">RU</option>
+        </select>
       </div>
     </div>
 
     <div class="user-bar" id="userBar">
       <span class="user-name" id="userNameEl"></span>
       <div class="user-actions">
-        <a href="/" class="new-req-link">+ Yeni sorğu</a>
-        <button class="signout-btn" onclick="window._clerk && window._clerk.signOut()">Çıxış</button>
+        <a href="/" class="new-req-link" id="newReqLink">+ Yeni sorğu</a>
+        <button class="signout-btn" id="signoutBtnEl" onclick="window._clerk && window._clerk.signOut()">Çıxış</button>
       </div>
     </div>
 
     <div class="page-header">
-      <h1>Sorğularım</h1>
-      <p>Göndərdiyiniz bütün sorğular</p>
+      <h1 id="pageH1">Sorğularım</h1>
+      <p id="pageSubtitle">Göndərdiyiniz bütün sorğular</p>
     </div>
 
-    <!-- Loading -->
     <div id="loadingState" class="state-msg">Yüklənir...</div>
 
-    <!-- Guest note (shown when not signed in, hidden when signed in) -->
     <div id="authCard" style="display:none"></div>
 
-    <!-- Task list -->
     <div id="taskList" style="display:none">
       <div class="task-list" id="tasksContainer"></div>
     </div>
 
-    <a href="/" class="back-link">← Yeni sorğu göndər</a>
+    <a href="/" class="back-link" id="backLinkEl">← Yeni sorğu göndər</a>
   </div>
 
   <script>
-    const statusMap = {
-      'Not started': { label: 'Başlanmayıb', cls: 'not-started', icon: '○' },
-      'In progress': { label: 'İcrada',      cls: 'in-progress',  icon: '◑' },
-      'In Review':   { label: 'Yoxlanılır',  cls: 'in-progress',  icon: '◑' },
-      'Done':        { label: 'Tamamlandı',  cls: 'done',          icon: '●' },
-      'On Hold':     { label: 'Gözləmədə',   cls: 'on-hold',       icon: '◌' },
-      'Cancelled':   { label: 'Ləğv edildi', cls: 'cancelled',     icon: '✕' },
+    let lang = localStorage.getItem('sp-lang') || 'az';
+    let cachedTasks = null;
+
+    const T = {
+      az: {
+        pageH1: 'Sorğularım', pageSubtitle: 'Göndərdiyiniz bütün sorğular',
+        newReq: '+ Yeni sorğu', signOut: 'Çıxış', backLink: '← Yeni sorğu göndər',
+        loading: 'Yüklənir...', errorConn: 'Bağlantı xətası',
+        emptyGuest: 'Bu cihazdan hələ heç bir sorğu göndərməmisiniz.',
+        emptyUser: 'Hələ heç bir sorğu göndərməmisiniz.',
+        signInPrompt: 'Bütün cihazlardan sorğularınızı görmək üçün hesabınıza daxil olun',
+        signIn: 'Daxil ol',
+        statuses: {
+          'Not started': { label: 'Başlanmayıb', cls: 'not-started', icon: '○' },
+          'In progress': { label: 'İcrada',      cls: 'in-progress', icon: '◑' },
+          'In Review':   { label: 'Yoxlanılır',  cls: 'in-progress', icon: '◑' },
+          'Done':        { label: 'Tamamlandı',  cls: 'done',        icon: '●' },
+          'On Hold':     { label: 'Gözləmədə',   cls: 'on-hold',     icon: '◌' },
+          'Cancelled':   { label: 'Ləğv edildi', cls: 'cancelled',   icon: '✕' },
+        },
+        priorities: { High: 'Yüksək', Medium: 'Orta', Low: 'Aşağı' },
+      },
+      en: {
+        pageH1: 'My Requests', pageSubtitle: 'All your submitted requests',
+        newReq: '+ New request', signOut: 'Sign out', backLink: '← Submit new request',
+        loading: 'Loading...', errorConn: 'Connection error',
+        emptyGuest: 'No requests submitted from this device yet.',
+        emptyUser: 'You haven\'t submitted any requests yet.',
+        signInPrompt: 'Sign in to see requests from all your devices',
+        signIn: 'Sign in',
+        statuses: {
+          'Not started': { label: 'Not started', cls: 'not-started', icon: '○' },
+          'In progress': { label: 'In progress', cls: 'in-progress', icon: '◑' },
+          'In Review':   { label: 'In review',   cls: 'in-progress', icon: '◑' },
+          'Done':        { label: 'Done',         cls: 'done',        icon: '●' },
+          'On Hold':     { label: 'On hold',      cls: 'on-hold',     icon: '◌' },
+          'Cancelled':   { label: 'Cancelled',    cls: 'cancelled',   icon: '✕' },
+        },
+        priorities: { High: 'High', Medium: 'Medium', Low: 'Low' },
+      },
+      ru: {
+        pageH1: 'Мои запросы', pageSubtitle: 'Все ваши отправленные запросы',
+        newReq: '+ Новый запрос', signOut: 'Выйти', backLink: '← Новый запрос',
+        loading: 'Загрузка...', errorConn: 'Ошибка соединения',
+        emptyGuest: 'С этого устройства ещё не было запросов.',
+        emptyUser: 'Вы ещё не отправили ни одного запроса.',
+        signInPrompt: 'Войдите, чтобы видеть запросы со всех устройств',
+        signIn: 'Войти',
+        statuses: {
+          'Not started': { label: 'Не начато',      cls: 'not-started', icon: '○' },
+          'In progress': { label: 'В процессе',     cls: 'in-progress', icon: '◑' },
+          'In Review':   { label: 'На проверке',    cls: 'in-progress', icon: '◑' },
+          'Done':        { label: 'Завершено',       cls: 'done',        icon: '●' },
+          'On Hold':     { label: 'Приостановлено', cls: 'on-hold',     icon: '◌' },
+          'Cancelled':   { label: 'Отменено',       cls: 'cancelled',   icon: '✕' },
+        },
+        priorities: { High: 'Высокий', Medium: 'Средний', Low: 'Низкий' },
+      },
     };
 
-    const priorityColors = { High: 'var(--red)', Medium: 'var(--yellow)', Low: 'var(--green)' };
-    const priorityLabels = { High: 'Yüksək', Medium: 'Orta', Low: 'Aşağı' };
+    function tr(key) { return (T[lang] || T.az)[key] ?? T.az[key]; }
+
+    function setLang(l) {
+      lang = l;
+      localStorage.setItem('sp-lang', l);
+      applyLang();
+      if (cachedTasks !== null) renderTasks(cachedTasks);
+    }
+
+    function applyLang() {
+      document.getElementById('langSel').value = lang;
+      document.getElementById('pageH1').textContent = tr('pageH1');
+      document.getElementById('pageSubtitle').textContent = tr('pageSubtitle');
+      document.getElementById('newReqLink').textContent = tr('newReq');
+      document.getElementById('signoutBtnEl').textContent = tr('signOut');
+      document.getElementById('backLinkEl').textContent = tr('backLink');
+      const ls = document.getElementById('loadingState');
+      if (ls && ls.style.display !== 'none') ls.textContent = tr('loading');
+    }
 
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
@@ -309,6 +386,8 @@
       }
     });
 
+    const priorityColors = { High: 'var(--red)', Medium: 'var(--yellow)', Low: 'var(--green)' };
+
     function formatDate(d) {
       if (!d) return '';
       return new Date(d).toLocaleDateString('az-AZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -319,24 +398,27 @@
     }
 
     function renderTasks(tasks) {
+      cachedTasks = tasks;
       const container = document.getElementById('tasksContainer');
+      const statuses = tr('statuses');
+      const priorities = tr('priorities');
 
       if (!tasks.length) {
         const isGuest = !window._clerk?.user;
         const msg = isGuest
-          ? '<div class="empty-icon">📭</div>Bu cihazdan hələ heç bir sorğu göndərməmisiniz.<br><br><small style="color:var(--muted)">Bütün cihazlardan sorğularınızı görmək üçün <button class="signout-btn" style="font-size:12px;text-decoration:underline" onclick="window._clerk && window._clerk.openSignIn()">hesabınıza daxil olun</button>.</small>'
-          : '<div class="empty-icon">📭</div>Hələ heç bir sorğu göndərməmisiniz.';
+          ? `<div class="empty-icon">📭</div>${tr('emptyGuest')}<br><br><small style="color:var(--muted)">${tr('signInPrompt')}: <button class="signout-btn" style="font-size:12px;text-decoration:underline" onclick="window._clerk && window._clerk.openSignIn()">${tr('signIn')}</button>.</small>`
+          : `<div class="empty-icon">📭</div>${tr('emptyUser')}`;
         container.innerHTML = `<div class="state-msg">${msg}</div>`;
         document.getElementById('taskList').style.display = 'block';
         return;
       }
 
       container.innerHTML = tasks.map(t => {
-        const st = statusMap[t.status] || { label: t.status, cls: 'not-started', icon: '○' };
+        const st = statuses[t.status] || { label: t.status, cls: 'not-started', icon: '○' };
         const trackHref = t.trackingId ? `/track.html?id=${t.trackingId}` : '#';
 
         const priorityHtml = t.priority
-          ? `<span class="priority-dot"><span style="background:${priorityColors[t.priority]||'var(--muted)'}"></span>${escHtml(priorityLabels[t.priority] || t.priority)}</span>`
+          ? `<span class="priority-dot"><span style="background:${priorityColors[t.priority]||'var(--muted)'}"></span>${escHtml(priorities[t.priority] || t.priority)}</span>`
           : '';
 
         const tagsHtml = (t.tags || []).map(tag => `<span class="tag-chip">${escHtml(tag)}</span>`).join('');
@@ -408,7 +490,7 @@
         const tasks = await fetchByIds(ids);
         renderTasks(tasks);
       } catch {
-        showError('Bağlantı xətası');
+        showError(tr('errorConn'));
       }
     }
 
@@ -428,7 +510,7 @@
         ]);
         renderTasks(mergeTasks(serverTasks, localTasks));
       } catch {
-        showError('Bağlantı xətası');
+        showError(tr('errorConn'));
       }
     }
 
@@ -444,8 +526,9 @@
       });
     }
 
+    applyLang();
+
     (async () => {
-      // Lokal sorğuları dərhal yüklə (auth gözləmədən)
       const localIds = getLocalIds();
 
       try {

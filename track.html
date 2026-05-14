@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate" />
   <title>Sorğunun statusu</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#0f0f0f" />
@@ -10,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="Support Panel" />
   <link rel="apple-touch-icon" href="/icons/icon.svg" />
-    <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <script>
     (function() {
@@ -67,9 +68,9 @@
     .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     .logo-text { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+    .logo-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 
     .theme-btn {
-      margin-left: auto;
       background: transparent;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -83,6 +84,15 @@
     .theme-btn:hover { color: var(--text); border-color: var(--border-hover); }
     [data-theme="dark"] .icon-moon { display: none; }
     [data-theme="light"] .icon-sun { display: none; }
+
+    .lang-sel {
+      appearance: none; -webkit-appearance: none;
+      background: transparent; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); cursor: pointer; padding: 3px 6px;
+      font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: .04em;
+      outline: none; transition: color .15s, border-color .15s;
+    }
+    .lang-sel:hover { color: var(--text); border-color: var(--border-hover); }
 
     .card {
       background: var(--surface);
@@ -118,8 +128,6 @@
     .bubble { padding: 9px 13px; border-radius: 10px; font-size: 13px; line-height: 1.5; max-width: 85%; }
     .bubble.mine { background: rgba(128,128,128,.1); color: var(--text); border-bottom-right-radius: 3px; }
     .bubble.theirs { background: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.2); border-bottom-left-radius: 3px; }
-
-    body.light .bubble.theirs { color: #166534; }
 
     .msg-meta { font-size: 11px; color: var(--muted); padding: 0 4px; }
     .msg-who { color: var(--green); }
@@ -171,20 +179,27 @@
     <div class="logo">
       <div class="logo-dot"></div>
       <span class="logo-text">Support Panel</span>
-      <button class="theme-btn" onclick="toggleTheme()" aria-label="Tema dəyiş">
-        <span class="icon-sun">☀</span>
-        <span class="icon-moon">☽</span>
-      </button>
+      <div class="logo-right">
+        <button class="theme-btn" onclick="toggleTheme()" aria-label="Theme">
+          <span class="icon-sun">☀</span>
+          <span class="icon-moon">☽</span>
+        </button>
+        <select class="lang-sel" id="langSel" onchange="setLang(this.value)">
+          <option value="az">AZ</option>
+          <option value="en">EN</option>
+          <option value="ru">RU</option>
+        </select>
+      </div>
     </div>
 
     <div class="card" id="statusCard">
-      <div class="loading">Yüklənir...</div>
+      <div class="loading" id="initialLoading">Yüklənir...</div>
     </div>
 
     <div class="card" id="chatCard" style="display:none">
-      <div class="section-label">Mesajlar</div>
+      <div class="section-label" id="sectionMessages">Mesajlar</div>
       <div class="messages" id="messages">
-        <div class="no-messages">Hələ mesaj yoxdur</div>
+        <div class="no-messages" id="noMsgEl">Hələ mesaj yoxdur</div>
       </div>
       <div class="input-row">
         <input class="msg-input" id="msgInput" placeholder="Mesaj yazın..." onkeydown="handleKey(event)" />
@@ -194,13 +209,85 @@
     </div>
 
     <div class="tracking-id" id="trackingIdLabel" style="display:none"></div>
-    <a href="/" class="back-link">← Yeni sorğu göndər</a>
+    <a href="/" class="back-link" id="backLinkEl">← Yeni sorğu göndər</a>
   </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const trackingId = params.get('id');
     let lastCommentCount = -1;
+    let cachedStatus = null;
+    let cachedComments = null;
+
+    let lang = localStorage.getItem('sp-lang') || 'az';
+
+    const T = {
+      az: {
+        loading: 'Yüklənir...', errorNoId: 'Tracking ID tapılmadı', errorNotFound: 'Sorğu tapılmadı', errorConn: 'Bağlantı xətası',
+        priority: 'Prioritet', dueDate: 'Son tarix', submitted: 'Göndərildi',
+        messages: 'Mesajlar', noMessages: 'Hələ mesaj yoxdur', msgPh: 'Mesaj yazın...', send: 'Göndər', sendFail: 'Göndərilmədi',
+        backLink: '← Yeni sorğu göndər',
+        statuses: {
+          'Not started': { label: 'Başlanmayıb', cls: 'not-started', icon: '○' },
+          'In progress': { label: 'İcrada',      cls: 'in-progress', icon: '◑' },
+          'In Review':   { label: 'Yoxlanılır',  cls: 'in-progress', icon: '◑' },
+          'Done':        { label: 'Tamamlandı',  cls: 'done',        icon: '●' },
+          'On Hold':     { label: 'Gözləmədə',   cls: 'on-hold',     icon: '◌' },
+          'Cancelled':   { label: 'Ləğv edildi', cls: 'cancelled',   icon: '✕' },
+        },
+        priorities: { High: '🔴 Yüksək', Medium: '🟡 Orta', Low: '🟢 Aşağı' },
+      },
+      en: {
+        loading: 'Loading...', errorNoId: 'Tracking ID not found', errorNotFound: 'Request not found', errorConn: 'Connection error',
+        priority: 'Priority', dueDate: 'Due date', submitted: 'Submitted',
+        messages: 'Messages', noMessages: 'No messages yet', msgPh: 'Type a message...', send: 'Send', sendFail: 'Failed to send',
+        backLink: '← Submit new request',
+        statuses: {
+          'Not started': { label: 'Not started', cls: 'not-started', icon: '○' },
+          'In progress': { label: 'In progress', cls: 'in-progress', icon: '◑' },
+          'In Review':   { label: 'In review',   cls: 'in-progress', icon: '◑' },
+          'Done':        { label: 'Done',         cls: 'done',        icon: '●' },
+          'On Hold':     { label: 'On hold',      cls: 'on-hold',     icon: '◌' },
+          'Cancelled':   { label: 'Cancelled',    cls: 'cancelled',   icon: '✕' },
+        },
+        priorities: { High: '🔴 High', Medium: '🟡 Medium', Low: '🟢 Low' },
+      },
+      ru: {
+        loading: 'Загрузка...', errorNoId: 'ID отслеживания не найден', errorNotFound: 'Запрос не найден', errorConn: 'Ошибка соединения',
+        priority: 'Приоритет', dueDate: 'Срок', submitted: 'Отправлено',
+        messages: 'Сообщения', noMessages: 'Сообщений пока нет', msgPh: 'Напишите сообщение...', send: 'Отправить', sendFail: 'Не отправлено',
+        backLink: '← Новый запрос',
+        statuses: {
+          'Not started': { label: 'Не начато',      cls: 'not-started', icon: '○' },
+          'In progress': { label: 'В процессе',     cls: 'in-progress', icon: '◑' },
+          'In Review':   { label: 'На проверке',    cls: 'in-progress', icon: '◑' },
+          'Done':        { label: 'Завершено',       cls: 'done',        icon: '●' },
+          'On Hold':     { label: 'Приостановлено', cls: 'on-hold',     icon: '◌' },
+          'Cancelled':   { label: 'Отменено',       cls: 'cancelled',   icon: '✕' },
+        },
+        priorities: { High: '🔴 Высокий', Medium: '🟡 Средний', Low: '🟢 Низкий' },
+      },
+    };
+
+    function tr(key) { return (T[lang] || T.az)[key] ?? T.az[key]; }
+
+    function setLang(l) {
+      lang = l;
+      localStorage.setItem('sp-lang', l);
+      applyLang();
+      if (cachedStatus) renderStatus(cachedStatus);
+      if (cachedComments !== null) renderComments();
+    }
+
+    function applyLang() {
+      document.getElementById('sectionMessages').textContent = tr('messages');
+      document.getElementById('msgInput').placeholder = tr('msgPh');
+      document.getElementById('sendBtn').textContent = tr('send');
+      document.getElementById('backLinkEl').textContent = tr('backLink');
+      document.getElementById('langSel').value = lang;
+      const nm = document.getElementById('noMsgEl');
+      if (nm) nm.textContent = tr('noMessages');
+    }
 
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
@@ -215,16 +302,6 @@
       }
     });
 
-    const statusMap = {
-      'Not started': { label: 'Başlanmayıb', cls: 'not-started', icon: '○' },
-      'In progress': { label: 'İcrada', cls: 'in-progress', icon: '◑' },
-      'In Review':   { label: 'Yoxlanılır', cls: 'in-progress', icon: '◑' },
-      'Done':        { label: 'Tamamlandı', cls: 'done', icon: '●' },
-      'On Hold':     { label: 'Gözləmədə', cls: 'on-hold', icon: '◌' },
-      'Cancelled':   { label: 'Ləğv edildi', cls: 'cancelled', icon: '✕' },
-    };
-
-    const priorityLabels = { High: '🔴 Yüksək', Medium: '🟡 Orta', Low: '🟢 Aşağı' };
     const priorityCls = { High: 'var(--red)', Medium: 'var(--yellow)', Low: 'var(--green)' };
 
     function formatDate(d) {
@@ -237,25 +314,32 @@
       return new Date(d).toLocaleTimeString('az-AZ', { hour:'2-digit', minute:'2-digit' });
     }
 
+    function renderStatus(data) {
+      const card = document.getElementById('statusCard');
+      const statuses = tr('statuses');
+      const st = statuses[data.status] || { label: data.status, cls: 'not-started', icon: '○' };
+      const pLabels = tr('priorities');
+      card.innerHTML =
+        '<div class="task-title">' + escHtml(data.taskName) + '</div>' +
+        '<div class="status-badge ' + st.cls + '">' + st.icon + ' ' + st.label + '</div>' +
+        '<div class="divider"></div>' +
+        (data.priority ? '<div class="meta"><span class="meta-label">' + tr('priority') + '</span><span style="color:' + (priorityCls[data.priority] || 'var(--text)') + '">' + (pLabels[data.priority] || data.priority) + '</span></div>' : '') +
+        (data.dueDate ? '<div class="meta"><span class="meta-label">' + tr('dueDate') + '</span><span>' + formatDate(data.dueDate) + '</span></div>' : '') +
+        '<div class="meta"><span class="meta-label">' + tr('submitted') + '</span><span>' + formatDate(data.createdTime) + '</span></div>';
+    }
+
     async function loadStatus() {
       const card = document.getElementById('statusCard');
-      if (!trackingId) { card.innerHTML = '<div class="error-state">Tracking ID tapılmadı</div>'; return; }
+      if (!trackingId) { card.innerHTML = '<div class="error-state">' + tr('errorNoId') + '</div>'; return; }
 
       try {
         const res = await fetch('/api/track?id=' + trackingId);
         const data = await res.json();
 
-        if (!data.success) { card.innerHTML = '<div class="error-state">' + (data.error || 'Sorğu tapılmadı') + '</div>'; return; }
+        if (!data.success) { card.innerHTML = '<div class="error-state">' + (data.error || tr('errorNotFound')) + '</div>'; return; }
 
-        const st = statusMap[data.status] || { label: data.status, cls: 'not-started', icon: '○' };
-
-        card.innerHTML =
-          '<div class="task-title">' + data.taskName + '</div>' +
-          '<div class="status-badge ' + st.cls + '">' + st.icon + ' ' + st.label + '</div>' +
-          '<div class="divider"></div>' +
-          (data.priority ? '<div class="meta"><span class="meta-label">Prioritet</span><span style="color:' + (priorityCls[data.priority] || 'var(--text)') + '">' + (priorityLabels[data.priority] || data.priority) + '</span></div>' : '') +
-          (data.dueDate ? '<div class="meta"><span class="meta-label">Son tarix</span><span>' + formatDate(data.dueDate) + '</span></div>' : '') +
-          '<div class="meta"><span class="meta-label">Göndərildi</span><span>' + formatDate(data.createdTime) + '</span></div>';
+        cachedStatus = data;
+        renderStatus(data);
 
         document.getElementById('chatCard').style.display = 'block';
         document.getElementById('trackingIdLabel').style.display = 'block';
@@ -265,7 +349,26 @@
         setInterval(loadComments, 3000);
         setInterval(loadStatus, 30000);
       } catch (err) {
-        card.innerHTML = '<div class="error-state">Bağlantı xətası</div>';
+        card.innerHTML = '<div class="error-state">' + tr('errorConn') + '</div>';
+      }
+    }
+
+    function renderComments() {
+      const container = document.getElementById('messages');
+      if (!container) return;
+      const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
+
+      if (!cachedComments || cachedComments.length === 0) {
+        container.innerHTML = '<div class="no-messages">' + tr('noMessages') + '</div>';
+      } else {
+        container.innerHTML = cachedComments.map(c =>
+          '<div class="msg-row ' + (c.isUser ? 'mine' : 'theirs') + '">' +
+          (!c.isUser ? '<span class="msg-meta msg-who">Support</span>' : '') +
+          '<div class="bubble ' + (c.isUser ? 'mine' : 'theirs') + '">' + escHtml(c.text) + '</div>' +
+          '<span class="msg-meta">' + formatTime(c.time) + '</span>' +
+          '</div>'
+        ).join('');
+        if (wasAtBottom || lastCommentCount === -1) container.scrollTop = container.scrollHeight;
       }
     }
 
@@ -278,26 +381,9 @@
         const count = data.comments?.length || 0;
         if (count === lastCommentCount) return;
 
-        const container = document.getElementById('messages');
-        const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
-
-        if (count === 0) {
-          container.innerHTML = '<div class="no-messages">Hələ mesaj yoxdur</div>';
-        } else {
-          container.innerHTML = data.comments.map(c =>
-            '<div class="msg-row ' + (c.isUser ? 'mine' : 'theirs') + '">' +
-            (!c.isUser ? '<span class="msg-meta msg-who">Support</span>' : '') +
-            '<div class="bubble ' + (c.isUser ? 'mine' : 'theirs') + '">' + escHtml(c.text) + '</div>' +
-            '<span class="msg-meta">' + formatTime(c.time) + '</span>' +
-            '</div>'
-          ).join('');
-
-          if (wasAtBottom || lastCommentCount === -1) {
-            container.scrollTop = container.scrollHeight;
-          }
-        }
-
+        cachedComments = data.comments || [];
         lastCommentCount = count;
+        renderComments();
       } catch {}
     }
 
@@ -323,13 +409,15 @@
 
         if (data.success) {
           input.value = '';
+          lastCommentCount = -1;
+          cachedComments = null;
           await loadComments();
         } else {
-          errEl.textContent = data.error || 'Göndərilmədi';
+          errEl.textContent = data.error || tr('sendFail');
           errEl.classList.add('visible');
         }
       } catch (err) {
-        errEl.textContent = 'Bağlantı xətası';
+        errEl.textContent = tr('errorConn');
         errEl.classList.add('visible');
       }
 
@@ -341,10 +429,11 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     }
 
-    function escHtml(t) {
-      return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    applyLang();
     loadStatus();
   </script>
   <script>
