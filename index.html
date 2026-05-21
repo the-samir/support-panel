@@ -121,8 +121,11 @@
       color: var(--muted); cursor: pointer; padding: 3px 6px;
       font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: .04em;
       outline: none; transition: color .15s, border-color .15s;
+      min-width: 28px; max-width: 130px;
     }
     .lang-sel:hover { color: var(--text); border-color: var(--border-hover); }
+    .goog-te-banner-frame, .skiptranslate { display: none !important; }
+    body { top: 0 !important; }
 
     /* User bar */
     .user-bar {
@@ -626,11 +629,7 @@
             <span class="icon-sun">☀</span>
             <span class="icon-moon">☽</span>
           </button>
-          <select class="lang-sel" id="langSel" onchange="setLang(this.value)">
-            <option value="az">AZ</option>
-            <option value="en">EN</option>
-            <option value="ru">RU</option>
-          </select>
+          <select class="lang-sel" id="langSel" onchange="setLang(this.value)"></select>
         </div>
       </div>
 
@@ -761,15 +760,77 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
+    const LANGUAGES = [
+      { code: 'az', name: 'Azərbaycan' },
+      { code: 'en', name: 'English' },
+      { code: 'ru', name: 'Русский' },
+      { code: 'tr', name: 'Türkçe' },
+      { code: 'de', name: 'Deutsch' },
+      { code: 'fr', name: 'Français' },
+      { code: 'es', name: 'Español' },
+      { code: 'it', name: 'Italiano' },
+      { code: 'pt', name: 'Português' },
+      { code: 'nl', name: 'Nederlands' },
+      { code: 'pl', name: 'Polski' },
+      { code: 'sv', name: 'Svenska' },
+      { code: 'da', name: 'Dansk' },
+      { code: 'no', name: 'Norsk' },
+      { code: 'fi', name: 'Suomi' },
+      { code: 'cs', name: 'Čeština' },
+      { code: 'sk', name: 'Slovenčina' },
+      { code: 'ro', name: 'Română' },
+      { code: 'hu', name: 'Magyar' },
+      { code: 'el', name: 'Ελληνικά' },
+      { code: 'bg', name: 'Български' },
+      { code: 'uk', name: 'Українська' },
+      { code: 'hr', name: 'Hrvatski' },
+      { code: 'sr', name: 'Srpski' },
+      { code: 'bs', name: 'Bosanski' },
+      { code: 'sl', name: 'Slovenščina' },
+      { code: 'mk', name: 'Македонски' },
+      { code: 'sq', name: 'Shqip' },
+      { code: 'lt', name: 'Lietuvių' },
+      { code: 'lv', name: 'Latviešu' },
+      { code: 'et', name: 'Eesti' },
+      { code: 'ar', name: 'العربية' },
+      { code: 'he', name: 'עברית' },
+      { code: 'fa', name: 'فارسی' },
+      { code: 'hi', name: 'हिन्दी' },
+      { code: 'bn', name: 'বাংলা' },
+      { code: 'ur', name: 'اردو' },
+      { code: 'zh', name: '中文' },
+      { code: 'ja', name: '日本語' },
+      { code: 'ko', name: '한국어' },
+      { code: 'th', name: 'ภาษาไทย' },
+      { code: 'vi', name: 'Tiếng Việt' },
+      { code: 'id', name: 'Indonesia' },
+      { code: 'ms', name: 'Melayu' },
+      { code: 'ka', name: 'ქართული' },
+      { code: 'hy', name: 'Հայերեն' },
+      { code: 'kk', name: 'Қазақша' },
+      { code: 'uz', name: "O'zbekcha" },
+    ];
+
+    const NATIVE_LANGS = new Set(['az', 'en', 'ru']);
+    const GT_CODE_MAP = { he: 'iw', zh: 'zh-CN' };
+    function gtCode(c) { return GT_CODE_MAP[c] || c; }
+
     function detectLang() {
       const saved = localStorage.getItem('sp-lang');
       if (saved) return saved;
-      const bl = (navigator.language || 'az').toLowerCase();
-      if (bl.startsWith('ru')) return 'ru';
-      if (bl.startsWith('en')) return 'en';
-      return 'az';
+      const bl = (navigator.languages?.[0] || navigator.language || 'az').toLowerCase();
+      const match = LANGUAGES.find(({ code }) =>
+        bl === code ||
+        bl.startsWith(code + '-') ||
+        (code === 'no' && (bl.startsWith('nb') || bl.startsWith('nn'))) ||
+        (code === 'he' && bl.startsWith('iw')) ||
+        (code === 'zh' && bl.startsWith('zh'))
+      );
+      return match ? match.code : 'az';
     }
-    let lang = detectLang();
+
+    let uiLang = detectLang();
+    let lang = NATIVE_LANGS.has(uiLang) ? uiLang : 'en';
 
     const T = {
       az: {
@@ -845,15 +906,58 @@
 
     function tr(key) { return (T[lang] || T.az)[key] ?? T.az[key]; }
 
+    function loadGoogleTranslate(cb) {
+      if (window._gtReady) { cb(); return; }
+      window.googleTranslateElementInit = function() {
+        new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'gTranslate');
+        window._gtReady = true;
+        cb();
+      };
+      const s = document.createElement('script');
+      s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      document.head.appendChild(s);
+    }
+
+    function applyGoogleTranslate(target) {
+      loadGoogleTranslate(() => {
+        const trySet = (n) => {
+          const combo = document.querySelector('select.goog-te-combo');
+          if (combo) { combo.value = target; combo.dispatchEvent(new Event('change')); }
+          else if (n > 0) setTimeout(() => trySet(n - 1), 200);
+        };
+        trySet(15);
+      });
+    }
+
+    function resetGoogleTranslate() {
+      const combo = document.querySelector('select.goog-te-combo');
+      if (combo) { combo.value = ''; combo.dispatchEvent(new Event('change')); }
+    }
+
+    function populateLangOptions() {
+      const sel = document.getElementById('langSel');
+      sel.innerHTML = '';
+      LANGUAGES.forEach(({ code, name }) => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      sel.value = uiLang;
+    }
+
     function setLang(l) {
-      lang = l;
+      uiLang = l;
+      lang = NATIVE_LANGS.has(l) ? l : 'en';
       localStorage.setItem('sp-lang', l);
       applyLang();
       if (_monthBtn) _monthBtn.textContent = tr('months')[fp?.currentMonth ?? 0];
+      if (NATIVE_LANGS.has(l)) resetGoogleTranslate();
+      else applyGoogleTranslate(gtCode(l));
     }
 
     function applyLang() {
-      document.getElementById('langSel').value = lang;
+      document.getElementById('langSel').value = uiLang;
       document.getElementById('pageH1').textContent = tr('pageH1');
       document.getElementById('pageSubtitle').textContent = tr('subtitle');
       document.getElementById('lbName').textContent = tr('lbName');
@@ -1223,7 +1327,9 @@
       });
     }
 
+    populateLangOptions();
     applyLang();
+    if (!NATIVE_LANGS.has(uiLang)) applyGoogleTranslate(gtCode(uiLang));
 
     (async () => {
       try {
@@ -1251,6 +1357,7 @@
       }
     })();
   </script>
+  <div id="gTranslate" style="display:none"></div>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
   </script>

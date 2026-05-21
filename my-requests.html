@@ -91,8 +91,11 @@
       color: var(--muted); cursor: pointer; padding: 3px 6px;
       font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: .04em;
       outline: none; transition: color .15s, border-color .15s;
+      min-width: 28px; max-width: 130px;
     }
     .lang-sel:hover { color: var(--text); border-color: var(--border-hover); }
+    .goog-te-banner-frame, .skiptranslate { display: none !important; }
+    body { top: 0 !important; }
 
     .page-header { margin-bottom: 1.75rem; }
     .page-header h1 { font-size: 24px; font-weight: 300; margin-bottom: 0.35rem; }
@@ -137,25 +140,14 @@
       padding: 1.5rem;
       margin-bottom: 0.75rem;
     }
-    .auth-card-inner {
-      text-align: center;
-      padding: 1.5rem 0.5rem;
-    }
+    .auth-card-inner { text-align: center; padding: 1.5rem 0.5rem; }
     .auth-icon { font-size: 32px; margin-bottom: 1rem; opacity: 0.6; }
     .auth-card-inner h2 { font-weight: 400; font-size: 20px; margin-bottom: 0.5rem; }
     .auth-card-inner p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem; }
     .auth-btn {
-      display: inline-block;
-      padding: 10px 28px;
-      background: var(--text);
-      color: var(--bg);
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.15s;
+      display: inline-block; padding: 10px 28px; background: var(--text); color: var(--bg);
+      border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s;
     }
     .auth-btn:hover { opacity: 0.88; }
 
@@ -178,30 +170,13 @@
     }
     .task-card:hover { border-color: var(--border-hover); }
 
-    .task-card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .task-name {
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 1.4;
-      flex: 1;
-    }
+    .task-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .task-name { font-size: 14px; font-weight: 400; line-height: 1.4; flex: 1; }
 
     .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
-      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 6px; font-size: 12px;
+      font-weight: 500; white-space: nowrap; flex-shrink: 0;
     }
     .not-started { background: rgba(128,128,128,.06); color: var(--muted); border: 1px solid var(--border); }
     .in-progress  { background: rgba(96,165,250,.1); color: var(--blue); border: 1px solid rgba(96,165,250,.3); }
@@ -209,43 +184,20 @@
     .on-hold      { background: rgba(128,128,128,.04); color: var(--muted); border: 1px solid var(--border); }
     .cancelled    { background: rgba(248,113,113,.08); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
 
-    .task-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .task-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .meta-chip { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
 
-    .meta-chip {
-      font-size: 11px;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-    }
-
-    .priority-dot {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-    }
+    .priority-dot { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; }
     .priority-dot span { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 
     .tag-chip {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
+      font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace;
     }
 
     .back-link {
-      display: inline-block;
-      margin-top: 1.5rem;
-      font-size: 13px;
-      color: var(--muted);
-      text-decoration: none;
-      transition: color .15s;
+      display: inline-block; margin-top: 1.5rem; font-size: 13px;
+      color: var(--muted); text-decoration: none; transition: color .15s;
     }
     .back-link:hover { color: var(--text); }
   </style>
@@ -260,11 +212,7 @@
           <span class="icon-sun">☀</span>
           <span class="icon-moon">☽</span>
         </button>
-        <select class="lang-sel" id="langSel" onchange="setLang(this.value)">
-          <option value="az">AZ</option>
-          <option value="en">EN</option>
-          <option value="ru">RU</option>
-        </select>
+        <select class="lang-sel" id="langSel" onchange="setLang(this.value)"></select>
       </div>
     </div>
 
@@ -282,7 +230,6 @@
     </div>
 
     <div id="loadingState" class="state-msg">Yüklənir...</div>
-
     <div id="authCard" style="display:none"></div>
 
     <div id="taskList" style="display:none">
@@ -292,16 +239,80 @@
     <a href="/" class="back-link" id="backLinkEl">← Yeni sorğu göndər</a>
   </div>
 
+  <div id="gTranslate" style="display:none"></div>
+
   <script>
+    const LANGUAGES = [
+      { code: 'az', name: 'Azərbaycan' },
+      { code: 'en', name: 'English' },
+      { code: 'ru', name: 'Русский' },
+      { code: 'tr', name: 'Türkçe' },
+      { code: 'de', name: 'Deutsch' },
+      { code: 'fr', name: 'Français' },
+      { code: 'es', name: 'Español' },
+      { code: 'it', name: 'Italiano' },
+      { code: 'pt', name: 'Português' },
+      { code: 'nl', name: 'Nederlands' },
+      { code: 'pl', name: 'Polski' },
+      { code: 'sv', name: 'Svenska' },
+      { code: 'da', name: 'Dansk' },
+      { code: 'no', name: 'Norsk' },
+      { code: 'fi', name: 'Suomi' },
+      { code: 'cs', name: 'Čeština' },
+      { code: 'sk', name: 'Slovenčina' },
+      { code: 'ro', name: 'Română' },
+      { code: 'hu', name: 'Magyar' },
+      { code: 'el', name: 'Ελληνικά' },
+      { code: 'bg', name: 'Български' },
+      { code: 'uk', name: 'Українська' },
+      { code: 'hr', name: 'Hrvatski' },
+      { code: 'sr', name: 'Srpski' },
+      { code: 'bs', name: 'Bosanski' },
+      { code: 'sl', name: 'Slovenščina' },
+      { code: 'mk', name: 'Македонски' },
+      { code: 'sq', name: 'Shqip' },
+      { code: 'lt', name: 'Lietuvių' },
+      { code: 'lv', name: 'Latviešu' },
+      { code: 'et', name: 'Eesti' },
+      { code: 'ar', name: 'العربية' },
+      { code: 'he', name: 'עברית' },
+      { code: 'fa', name: 'فارسی' },
+      { code: 'hi', name: 'हिन्दी' },
+      { code: 'bn', name: 'বাংলা' },
+      { code: 'ur', name: 'اردو' },
+      { code: 'zh', name: '中文' },
+      { code: 'ja', name: '日本語' },
+      { code: 'ko', name: '한국어' },
+      { code: 'th', name: 'ภาษาไทย' },
+      { code: 'vi', name: 'Tiếng Việt' },
+      { code: 'id', name: 'Indonesia' },
+      { code: 'ms', name: 'Melayu' },
+      { code: 'ka', name: 'ქართული' },
+      { code: 'hy', name: 'Հայերեն' },
+      { code: 'kk', name: 'Қазақша' },
+      { code: 'uz', name: "O'zbekcha" },
+    ];
+
+    const NATIVE_LANGS = new Set(['az', 'en', 'ru']);
+    const GT_CODE_MAP = { he: 'iw', zh: 'zh-CN' };
+    function gtCode(c) { return GT_CODE_MAP[c] || c; }
+
     function detectLang() {
       const saved = localStorage.getItem('sp-lang');
       if (saved) return saved;
-      const bl = (navigator.language || 'az').toLowerCase();
-      if (bl.startsWith('ru')) return 'ru';
-      if (bl.startsWith('en')) return 'en';
-      return 'az';
+      const bl = (navigator.languages?.[0] || navigator.language || 'az').toLowerCase();
+      const match = LANGUAGES.find(({ code }) =>
+        bl === code ||
+        bl.startsWith(code + '-') ||
+        (code === 'no' && (bl.startsWith('nb') || bl.startsWith('nn'))) ||
+        (code === 'he' && bl.startsWith('iw')) ||
+        (code === 'zh' && bl.startsWith('zh'))
+      );
+      return match ? match.code : 'az';
     }
-    let lang = detectLang();
+
+    let uiLang = detectLang();
+    let lang = NATIVE_LANGS.has(uiLang) ? uiLang : 'en';
     let cachedTasks = null;
 
     const T = {
@@ -363,15 +374,46 @@
 
     function tr(key) { return (T[lang] || T.az)[key] ?? T.az[key]; }
 
+    function loadGoogleTranslate(cb) {
+      if (window._gtReady) { cb(); return; }
+      window.googleTranslateElementInit = function() {
+        new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'gTranslate');
+        window._gtReady = true;
+        cb();
+      };
+      const s = document.createElement('script');
+      s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      document.head.appendChild(s);
+    }
+
+    function applyGoogleTranslate(target) {
+      loadGoogleTranslate(() => {
+        const trySet = (n) => {
+          const combo = document.querySelector('select.goog-te-combo');
+          if (combo) { combo.value = target; combo.dispatchEvent(new Event('change')); }
+          else if (n > 0) setTimeout(() => trySet(n - 1), 200);
+        };
+        trySet(15);
+      });
+    }
+
+    function resetGoogleTranslate() {
+      const combo = document.querySelector('select.goog-te-combo');
+      if (combo) { combo.value = ''; combo.dispatchEvent(new Event('change')); }
+    }
+
     function setLang(l) {
-      lang = l;
+      uiLang = l;
+      lang = NATIVE_LANGS.has(l) ? l : 'en';
       localStorage.setItem('sp-lang', l);
       applyLang();
       if (cachedTasks !== null) renderTasks(cachedTasks);
+      if (NATIVE_LANGS.has(l)) resetGoogleTranslate();
+      else applyGoogleTranslate(gtCode(l));
     }
 
     function applyLang() {
-      document.getElementById('langSel').value = lang;
+      document.getElementById('langSel').value = uiLang;
       document.getElementById('pageH1').textContent = tr('pageH1');
       document.getElementById('pageSubtitle').textContent = tr('pageSubtitle');
       document.getElementById('newReqLink').textContent = tr('newReq');
@@ -379,6 +421,18 @@
       document.getElementById('backLinkEl').textContent = tr('backLink');
       const ls = document.getElementById('loadingState');
       if (ls && ls.style.display !== 'none') ls.textContent = tr('loading');
+    }
+
+    function populateLangOptions() {
+      const sel = document.getElementById('langSel');
+      sel.innerHTML = '';
+      LANGUAGES.forEach(({ code, name }) => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      sel.value = uiLang;
     }
 
     function toggleTheme() {
@@ -490,10 +544,7 @@
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('authCard').style.display = 'none';
       const ids = getLocalIds();
-      if (!ids.length) {
-        renderTasks([]);
-        return;
-      }
+      if (!ids.length) { renderTasks([]); return; }
       try {
         const tasks = await fetchByIds(ids);
         renderTasks(tasks);
@@ -534,11 +585,11 @@
       });
     }
 
+    populateLangOptions();
     applyLang();
+    if (!NATIVE_LANGS.has(uiLang)) applyGoogleTranslate(gtCode(uiLang));
 
     (async () => {
-      const localIds = getLocalIds();
-
       try {
         const { publishableKey } = await fetch('/api/config').then(r => r.json());
         if (!publishableKey) { await showTasksForGuest(); return; }
