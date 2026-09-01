@@ -136,6 +136,16 @@
     .msg-meta { font-size: 11px; color: var(--muted); padding: 0 4px; }
     .msg-who { color: var(--orange); }
     .msg-who-user { color: var(--muted); }
+
+    .tr-btn {
+      background: none; border: none; padding: 0;
+      font-family: 'DM Sans', sans-serif; font-size: 11px;
+      color: var(--muted); cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+      transition: color .15s;
+    }
+    .tr-btn:hover { color: var(--text); }
+    .tr-btn:disabled { cursor: default; text-decoration: none; opacity: .7; }
     .no-messages { font-size: 13px; color: var(--muted); text-align: center; padding: 1rem 0; }
 
     .input-row { display: flex; gap: 8px; }
@@ -325,6 +335,76 @@
       } catch {}
     }
 
+    let cachedComments = null;
+    const translations = {};
+
+    function renderComments() {
+      const container = document.getElementById('messages');
+      if (!container) return;
+      const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
+
+      if (!cachedComments || cachedComments.length === 0) {
+        container.innerHTML = '<div class="no-messages">Hələ mesaj yoxdur</div>';
+        return;
+      }
+
+      container.innerHTML = cachedComments.map(c => {
+        const isMine = c.isAdmin;
+        const t = translations[c.id];
+        const body = (t && t.shown) ? t.text : c.text;
+        const label = t
+          ? (t.loading ? 'Tərcümə olunur...' : (t.shown ? 'Orijinal' : 'Tərcümə et'))
+          : 'Tərcümə et';
+        return '<div class="msg-row ' + (isMine ? 'mine' : 'theirs') + '">' +
+          (isMine ? '<span class="msg-meta msg-who">Samir</span>' : '<span class="msg-meta msg-who-user">İstifadəçi</span>') +
+          '<div class="bubble ' + (isMine ? 'mine' : 'theirs') + '">' + escHtml(body) + '</div>' +
+          '<span class="msg-meta">' + formatTime(c.time) + ' · ' +
+            '<button class="tr-btn" ' + (t && t.loading ? 'disabled ' : '') +
+            'onclick="toggleTranslate(\'' + c.id + '\')">' + label + '</button>' +
+          '</span>' +
+        '</div>';
+      }).join('');
+
+      if (wasAtBottom || lastCommentCount === -1) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    async function toggleTranslate(id) {
+      const c = (cachedComments || []).find(x => x.id === id);
+      if (!c) return;
+
+      const existing = translations[id];
+      if (existing && !existing.loading) {
+        existing.shown = !existing.shown;
+        renderComments();
+        return;
+      }
+      if (existing) return; // artıq yüklənir
+
+      translations[id] = { text: c.text, shown: false, loading: true };
+      renderComments();
+
+      try {
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: c.text, target: 'az' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          translations[id] = { text: data.translated, shown: true };
+        } else {
+          delete translations[id];
+          alert('Tərcümə alınmadı');
+        }
+      } catch {
+        delete translations[id];
+        alert('Tərcümə alınmadı');
+      }
+      renderComments();
+    }
+
     async function loadComments() {
       try {
         const res = await fetch('/api/comments?id=' + trackingId);
@@ -334,26 +414,8 @@
         const count = data.comments?.length || 0;
         if (count === lastCommentCount) return;
 
-        const container = document.getElementById('messages');
-        const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
-
-        if (count === 0) {
-          container.innerHTML = '<div class="no-messages">Hələ mesaj yoxdur</div>';
-        } else {
-          container.innerHTML = data.comments.map(c => {
-            const isMine = c.isAdmin;
-            return '<div class="msg-row ' + (isMine ? 'mine' : 'theirs') + '">' +
-              (isMine ? '<span class="msg-meta msg-who">Samir</span>' : '<span class="msg-meta msg-who-user">İstifadəçi</span>') +
-              '<div class="bubble ' + (isMine ? 'mine' : 'theirs') + '">' + escHtml(c.text) + '</div>' +
-              '<span class="msg-meta">' + formatTime(c.time) + '</span>' +
-            '</div>';
-          }).join('');
-
-          if (wasAtBottom || lastCommentCount === -1) {
-            container.scrollTop = container.scrollHeight;
-          }
-        }
-
+        cachedComments = data.comments || [];
+        renderComments();
         lastCommentCount = count;
       } catch {}
     }

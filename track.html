@@ -134,6 +134,16 @@
 
     .msg-meta { font-size: 11px; color: var(--muted); padding: 0 4px; }
     .msg-who { color: var(--green); }
+
+    .tr-btn {
+      background: none; border: none; padding: 0;
+      font-family: 'DM Sans', sans-serif; font-size: 11px;
+      color: var(--muted); cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+      transition: color .15s;
+    }
+    .tr-btn:hover { color: var(--text); }
+    .tr-btn:disabled { cursor: default; text-decoration: none; opacity: .7; }
     .no-messages { font-size: 13px; color: var(--muted); text-align: center; padding: 1rem 0; }
 
     .input-row { display: flex; gap: 8px; }
@@ -219,6 +229,7 @@
     let lastCommentCount = -1;
     let cachedStatus = null;
     let cachedComments = null;
+    const translations = {};
 
     const LANGUAGES = [
       { code: 'az', name: 'Azərbaycan' },
@@ -298,6 +309,7 @@
         priority: 'Prioritet', dueDate: 'Son tarix', submitted: 'Göndərildi',
         messages: 'Mesajlar', noMessages: 'Hələ mesaj yoxdur', msgPh: 'Mesaj yazın...', send: 'Göndər', sendFail: 'Göndərilmədi',
         backLink: '← Yeni sorğu göndər',
+        translate: 'Tərcümə et', showOriginal: 'Orijinal', translating: 'Tərcümə olunur...', trFail: 'Tərcümə alınmadı',
         statuses: {
           'Not started': { label: 'Başlanmayıb', cls: 'not-started', icon: '○' },
           'In progress': { label: 'İcrada',      cls: 'in-progress', icon: '◑' },
@@ -313,6 +325,7 @@
         priority: 'Priority', dueDate: 'Due date', submitted: 'Submitted',
         messages: 'Messages', noMessages: 'No messages yet', msgPh: 'Type a message...', send: 'Send', sendFail: 'Failed to send',
         backLink: '← Submit new request',
+        translate: 'Translate', showOriginal: 'Original', translating: 'Translating...', trFail: 'Translation failed',
         statuses: {
           'Not started': { label: 'Not started', cls: 'not-started', icon: '○' },
           'In progress': { label: 'In progress', cls: 'in-progress', icon: '◑' },
@@ -328,6 +341,7 @@
         priority: 'Приоритет', dueDate: 'Срок', submitted: 'Отправлено',
         messages: 'Сообщения', noMessages: 'Сообщений пока нет', msgPh: 'Напишите сообщение...', send: 'Отправить', sendFail: 'Не отправлено',
         backLink: '← Новый запрос',
+        translate: 'Перевести', showOriginal: 'Оригинал', translating: 'Перевод...', trFail: 'Не удалось перевести',
         statuses: {
           'Not started': { label: 'Не начато',      cls: 'not-started', icon: '○' },
           'In progress': { label: 'В процессе',     cls: 'in-progress', icon: '◑' },
@@ -475,15 +489,58 @@
       if (!cachedComments || cachedComments.length === 0) {
         container.innerHTML = '<div class="no-messages">' + tr('noMessages') + '</div>';
       } else {
-        container.innerHTML = cachedComments.map(c =>
-          '<div class="msg-row ' + (c.isUser ? 'mine' : 'theirs') + '">' +
-          (!c.isUser ? '<span class="msg-meta msg-who">Support</span>' : '') +
-          '<div class="bubble ' + (c.isUser ? 'mine' : 'theirs') + '">' + escHtml(c.text) + '</div>' +
-          '<span class="msg-meta">' + formatTime(c.time) + '</span>' +
-          '</div>'
-        ).join('');
+        container.innerHTML = cachedComments.map(c => {
+          const t = translations[c.id];
+          const body = (t && t.shown) ? t.text : c.text;
+          const label = t
+            ? (t.loading ? tr('translating') : (t.shown ? tr('showOriginal') : tr('translate')))
+            : tr('translate');
+          return '<div class="msg-row ' + (c.isUser ? 'mine' : 'theirs') + '">' +
+            (!c.isUser ? '<span class="msg-meta msg-who">Support</span>' : '') +
+            '<div class="bubble ' + (c.isUser ? 'mine' : 'theirs') + '">' + escHtml(body) + '</div>' +
+            '<span class="msg-meta">' + formatTime(c.time) + ' · ' +
+              '<button class="tr-btn" ' + (t && t.loading ? 'disabled ' : '') +
+              'onclick="toggleTranslate(\'' + c.id + '\')">' + label + '</button>' +
+            '</span>' +
+          '</div>';
+        }).join('');
         if (wasAtBottom || lastCommentCount === -1) container.scrollTop = container.scrollHeight;
       }
+    }
+
+    async function toggleTranslate(id) {
+      const c = (cachedComments || []).find(x => x.id === id);
+      if (!c) return;
+
+      const existing = translations[id];
+      if (existing && !existing.loading) {
+        existing.shown = !existing.shown;
+        renderComments();
+        return;
+      }
+      if (existing) return; // artıq yüklənir
+
+      translations[id] = { text: c.text, shown: false, loading: true };
+      renderComments();
+
+      try {
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: c.text, target: uiLang })
+        });
+        const data = await res.json();
+        if (data.success) {
+          translations[id] = { text: data.translated, shown: true };
+        } else {
+          delete translations[id];
+          alert(tr('trFail'));
+        }
+      } catch {
+        delete translations[id];
+        alert(tr('trFail'));
+      }
+      renderComments();
     }
 
     async function loadComments() {
