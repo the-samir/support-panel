@@ -1,7 +1,5 @@
 import { checkAdmin } from './_adminAuth.js';
 
-const DB = '1df0b457c8b48086b007e96a116faf27';
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -15,6 +13,9 @@ export default async function handler(req, res) {
 
   const token = process.env.NOTION_TOKEN;
   if (!token) return res.status(500).json({ error: 'Token tapılmadı' });
+
+  const DB = process.env.NOTION_DATABASE_ID;
+  if (!DB) return res.status(500).json({ error: 'Database ID tapılmadı' });
 
   const { status, priority } = req.query;
   const filters = [

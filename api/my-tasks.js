@@ -14,8 +14,11 @@ export default async function handler(req, res) {
   const token = process.env.NOTION_TOKEN;
   if (!token) return res.status(500).json({ error: 'Token tapılmadı' });
 
+  const dbId = process.env.NOTION_DATABASE_ID;
+  if (!dbId) return res.status(500).json({ error: 'Database ID tapılmadı' });
+
   try {
-    const notionRes = await fetch('https://api.notion.com/v1/databases/1df0b457c8b48086b007e96a116faf27/query', {
+    const notionRes = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
