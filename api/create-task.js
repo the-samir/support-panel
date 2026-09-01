@@ -27,6 +27,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Notion token tapılmadı' });
   }
 
+  const dbId = process.env.NOTION_DATABASE_ID;
+  if (!dbId) {
+    return res.status(500).json({ error: 'Notion database ID tapılmadı' });
+  }
+
   const trackingId = randomBytes(6).toString('hex');
 
   const properties = {
@@ -39,7 +44,7 @@ export default async function handler(req, res) {
     "Source": {
       select: { name: "Support Panel" }
     },
-    "Project": {
+    "Azsoftware Layihəsi": {
       relation: [{ id: "35a0b457-c8b4-80cb-a23a-f0818b68b089" }]
     },
     "Tracking ID": {
@@ -84,7 +89,7 @@ export default async function handler(req, res) {
         'Notion-Version': '2022-06-28'
       },
       body: JSON.stringify({
-        parent: { database_id: '1df0b457c8b48086b007e96a116faf27' },
+        parent: { database_id: dbId },
         icon: { type: 'external', external: { url: '/icons/verified_gray.svg' } },
         properties
       })
